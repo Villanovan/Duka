@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Duka Find — Find your duka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --cream:#FCF7EC; --cream-deep:#F4EBD9; --paper:#FFFFFF;
+    --ink:#20291E; --ink-soft:#5C6B5F; --ink-faint:#8B9A8C;
+    --green:#2E6E4E; --green-dark:#1B4A32; --green-soft:#E6F1EA;
+    --mango:#EDA93A; --mango-soft:#FCEFD4;
+    --paprika:#C6512E; --paprika-soft:#F8E3DA;
+    --line:rgba(32,41,30,0.10);
+    --shadow-sm:0 6px 18px rgba(32,41,30,0.06);
+    --shadow-md:0 18px 40px rgba(32,41,30,0.12);
+    --r-lg:24px; --r-md:16px; --r-sm:11px; --r-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  html{height:100%;}
+  body{margin:0;min-height:100dvh;background:var(--cream);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0 0 4px;letter-spacing:-0.01em;}
+  button,input,textarea,select{font-family:inherit;}
+  img{max-width:100%;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+  :focus-visible{outline:2.5px solid var(--green);outline-offset:2px;}
+  svg{width:20px;height:20px;display:block;}
+
+  .app{max-width:1180px;margin:0 auto;position:relative;padding-bottom:78px;}
+  @media(min-width:720px){.app{padding-bottom:0;}}
+
+  header.topbar{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--green-dark),var(--green) 130%);color:#fff;border-radius:0 0 28px 28px;}
+  .blob{position:absolute;border-radius:50%;filter:blur(2px);opacity:0.16;background:var(--mango);}
+  .blob1{width:220px;height:220px;top:-110px;right:-60px;}
+  .blob2{width:160px;height:160px;bottom:-90px;left:10%;opacity:0.12;}
+  .topbar-inner{position:relative;max-width:1180px;margin:0 auto;padding:20px 20px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-mark{width:38px;height:38px;border-radius:11px;background:var(--mango);display:flex;align-items:center;justify-content:center;color:var(--green-dark);flex:none;}
+  .logo-text{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:700;}
+  .logo-sub{font-size:0.68rem;letter-spacing:0.13em;text-transform:uppercase;opacity:0.8;font-family:'IBM Plex Mono',monospace;}
+
+  .top-right{display:flex;align-items:center;gap:10px;}
+  .top-nav{display:none;gap:6px;background:rgba(255,255,255,0.12);padding:5px;border-radius:var(--r-pill);}
+  @media(min-width:720px){.top-nav{display:flex;}}
+  .nav-btn{display:flex;align-items:center;gap:7px;background:none;border:none;color:#fff;opacity:0.82;font-weight:600;font-size:0.88rem;padding:9px 16px;border-radius:var(--r-pill);cursor:pointer;transition:opacity .15s,background .15s;position:relative;}
+  .nav-btn:hover{opacity:1;}
+  .nav-btn.active{background:#fff;color:var(--green-dark);opacity:1;}
+  .nav-badge{background:var(--paprika);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
+
+  .auth-pill{display:flex;align-items:center;gap:8px;background:#fff;color:var(--green-dark);border:none;font-weight:700;font-size:0.84rem;padding:9px 16px;border-radius:var(--r-pill);cursor:pointer;}
+  .user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.14);color:#fff;padding:6px 8px 6px 6px;border-radius:var(--r-pill);}
+  .user-chip .avatar{width:28px;height:28px;font-size:0.78rem;}
+  .user-chip button{background:none;border:none;color:#fff;opacity:0.8;font-size:0.78rem;font-weight:700;cursor:pointer;}
+  .user-chip button:hover{opacity:1;}
+
+  .views{position:relative;padding:0 20px;}
+  .view.root{display:none;max-width:1180px;margin:0 auto;padding-top:26px;}
+  .view.root.active{display:block;animation:riseIn .35s ease;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  .hero{max-width:56ch;margin-bottom:22px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--green);font-weight:600;margin:0 0 6px;}
+  .hero h1{font-size:1.7rem;}
+  .hero .sub{color:var(--ink-soft);margin:6px 0 0;}
+
+  .search-wrap{position:relative;max-width:520px;margin-bottom:24px;}
+  .search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--ink-faint);width:19px;height:19px;pointer-events:none;}
+  .search-wrap input{width:100%;padding:13px 16px 13px 46px;border:1.6px solid var(--line);border-radius:var(--r-pill);background:var(--paper);font-size:0.92rem;color:var(--ink);box-shadow:var(--shadow-sm);transition:border-color .15s,box-shadow .15s;}
+  .search-wrap input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft);}
+  .search-wrap .clear-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--cream-deep);color:var(--ink-soft);cursor:pointer;display:none;align-items:center;justify-content:center;}
+  .search-wrap .clear-btn svg{position:static;transform:none;width:14px;height:14px;color:inherit;}
+  .search-wrap.has-value .clear-btn{display:flex;}
+  .match-note{display:flex;align-items:center;gap:5px;font-size:0.76rem;color:var(--green-dark);background:var(--green-soft);padding:4px 10px;border-radius:var(--r-pill);margin-top:8px;width:fit-content;}
+  .match-note svg{width:13px;height:13px;}
+  .search-count{color:var(--ink-faint);font-size:0.82rem;margin:-14px 0 18px;}
+  .section-head{margin-bottom:20px;}
+  .section-head h1{font-size:1.7rem;}
+  .section-head .sub{color:var(--ink-soft);margin:6px 0 0;}
+
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;padding-bottom:20px;}
+  .shop-card{background:var(--paper);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--line);cursor:pointer;transition:transform .18s,box-shadow .18s;}
+  .shop-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .shop-cover{position:relative;height:170px;background:linear-gradient(135deg,var(--green),var(--green-dark)) center/cover no-repeat;}
+  .shop-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(20,28,20,0.72) 0%,rgba(20,28,20,0) 55%);}
+  .shop-cover-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);}
+  .shop-cover-info{position:absolute;left:16px;right:16px;bottom:13px;color:#fff;z-index:1;}
+  .shop-cover-info h3{color:#fff;font-size:1.18rem;margin-bottom:2px;}
+  .shop-loc{display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;opacity:0.92;}
+  .shop-loc svg{width:14px;height:14px;}
+  .shop-card-foot{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .view-shop{color:var(--green);font-weight:700;font-size:0.85rem;display:flex;align-items:center;gap:4px;}
+  .view-shop svg{width:16px;height:16px;}
+
+  .empty-state{background:var(--paper);border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:44px 24px;text-align:center;color:var(--ink-soft);}
+  .empty-state .es-icon{width:52px;height:52px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .empty-state h3{color:var(--ink);margin-bottom:6px;}
+  .google-btn{margin-top:14px;display:inline-flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);color:var(--ink);font-weight:700;font-size:0.88rem;padding:11px 20px;border-radius:var(--r-pill);cursor:pointer;box-shadow:var(--shadow-sm);}
+  .google-btn:hover{border-color:var(--green);}
+
+  .conv-list{display:flex;flex-direction:column;gap:10px;padding-bottom:20px;}
+  .conv-row{display:flex;align-items:center;gap:13px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 15px;cursor:pointer;transition:transform .15s,box-shadow .15s;}
+  .conv-row:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+  .avatar{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;flex:none;}
+  .conv-main{flex:1;min-width:0;}
+  .conv-top{display:flex;justify-content:space-between;gap:8px;}
+  .conv-top h4{margin:0;font-family:'Fraunces',serif;font-size:1.02rem;}
+  .conv-time{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--ink-faint);white-space:nowrap;}
+  .conv-preview{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:2px;}
+  .conv-preview p{margin:0;font-size:0.85rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--paprika);flex:none;}
+
+  .view.pushed{position:fixed;inset:0;background:var(--cream);z-index:60;transform:translateX(100%);transition:transform .32s cubic-bezier(.22,.61,.36,1);display:flex;flex-direction:column;}
+  .view.pushed.active{transform:translateX(0);}
+  .page-head{flex:none;display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2;}
+  .page-head h2{font-size:1.05rem;flex:1;text-align:center;}
+  .icon-btn.round{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+  .icon-btn.round:hover{background:var(--green-soft);color:var(--green-dark);}
+  .page-body{flex:1;overflow-y:auto;padding-bottom:100px;}
+
+  .detail-cover{height:220px;background:linear-gradient(135deg,var(--green),var(--green-dark)) center/cover no-repeat;}
+  .detail-content{max-width:760px;margin:0 auto;padding:22px 20px 40px;}
+  .detail-content h1{font-size:1.5rem;}
+  .gallery{display:flex;gap:9px;margin:14px 0 4px;overflow-x:auto;padding-bottom:4px;}
+  .gallery img{width:74px;height:74px;object-fit:cover;border-radius:12px;border:1px solid var(--line);flex:none;}
+  .policy{background:var(--green-soft);border-radius:var(--r-md);padding:14px 16px;font-size:0.88rem;color:var(--green-dark);margin:18px 0 26px;display:flex;gap:10px;align-items:flex-start;}
+  .policy svg{flex:none;margin-top:1px;}
+  .policy b{display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.07em;font-family:'IBM Plex Mono',monospace;margin-bottom:3px;opacity:0.85;}
+  .verified-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-soft);color:var(--green-dark);font-size:0.74rem;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);margin-top:8px;}
+  .verified-badge svg{width:14px;height:14px;}
+
+  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+  .product-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;transition:transform .15s;}
+  .product-card:hover{transform:translateY(-2px);}
+  .product-card img{width:100%;height:120px;object-fit:cover;display:block;background:var(--cream-deep);}
+  .product-card-body{padding:12px 13px 14px;}
+  .product-card-body h4{font-family:'Fraunces',serif;font-size:0.98rem;margin:0 0 7px;}
+  .product-card-body p{font-size:0.8rem;color:var(--ink-soft);margin:8px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .meta-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+  .tag{position:relative;display:inline-flex;align-items:center;background:var(--mango);color:var(--green-dark);padding:3px 12px 3px 18px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:0.76rem;clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%);}
+  .tag::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--cream);}
+  .stamp{display:inline-flex;align-items:center;border:1.6px solid var(--paprika);color:var(--paprika);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:0.6rem;letter-spacing:.07em;padding:2px 7px;border-radius:5px;transform:rotate(-4deg);font-weight:700;}
+
+  .sticky-cta{position:sticky;bottom:0;background:linear-gradient(0deg,var(--cream) 60%,rgba(252,247,236,0));padding:22px 20px 18px;}
+  .btn{font-weight:700;font-size:0.94rem;border:none;border-radius:var(--r-pill);padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .15s;}
+  .btn:active{transform:scale(0.97);}
+  .btn-block{width:100%;max-width:760px;margin:0 auto;display:flex;}
+  .btn-primary{background:var(--green);color:#fff;box-shadow:0 10px 24px rgba(46,110,78,0.30);}
+  .btn-primary:hover{background:var(--green-dark);}
+
+  .chat-head-info{display:flex;align-items:center;gap:10px;flex:1;}
+  .chat-head-info .avatar{width:36px;height:36px;font-size:0.95rem;}
+  .chat-head-info h2{font-size:1rem;text-align:left;margin:0;}
+  .tiny{font-size:0.72rem;color:var(--ink-soft);}
+  .chat-scroll{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(circle at 10% 0%, rgba(46,110,78,0.05), transparent 40%),var(--cream-deep);}
+  .msg{max-width:76%;padding:10px 14px;border-radius:16px;font-size:0.9rem;box-shadow:var(--shadow-sm);}
+  .msg.customer{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+  .msg.owner{background:var(--paper);color:var(--ink);align-self:flex-start;border-bottom-left-radius:4px;border:1px solid var(--line);}
+  .msg time{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.63rem;opacity:0.65;margin-top:5px;}
+  .empty-chat{margin:auto;text-align:center;color:var(--ink-soft);font-size:0.88rem;max-width:26ch;}
+
+  .composer{flex:none;display:flex;align-items:flex-end;gap:10px;padding:12px 14px;padding-bottom:max(12px, env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);}
+  .composer textarea{flex:1;resize:none;max-height:110px;border:1.5px solid var(--line);border-radius:20px;padding:11px 16px;font-size:0.9rem;background:var(--cream);color:var(--ink);}
+  .composer textarea:focus{outline:none;border-color:var(--green);}
+  .send-btn{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;transition:background .15s,transform .12s;}
+  .send-btn:hover{background:var(--green-dark);}
+  .send-btn:active{transform:scale(0.93);}
+  .send-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 10px max(8px, env(safe-area-inset-bottom));z-index:55;box-shadow:0 -6px 20px rgba(32,41,30,0.06);}
+  @media(min-width:720px){.bottom-nav{display:none;}}
+  .bn-btn{position:relative;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-faint);font-size:0.68rem;font-weight:600;padding:6px 22px;border-radius:14px;cursor:pointer;}
+  .bn-btn.active{color:var(--green-dark);background:var(--green-soft);}
+  .bn-badge{position:absolute;top:2px;right:12px;background:var(--paprika);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
+
+  .loading-row{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:0.88rem;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="topbar-inner">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7l2-4h14l2 4v2"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M4 9v10a1 1 0 0 0 1 1h4v-6h6v6h4a1 1 0 0 0 1-1V9"/></svg>
+        </div>
+        <div>
+          <div class="logo-text">Duka Find</div>
+          <div class="logo-sub">Find your duka</div>
+        </div>
+      </div>
+      <div class="top-right">
+        <nav class="top-nav">
+          <button class="nav-btn active" data-root="home">Home</button>
+          <button class="nav-btn" data-root="messages">Messages <span class="nav-badge" id="topBadge" hidden>0</span></button>
+        </nav>
+        <div id="authArea"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="views">
+    <section class="view root active" id="view-home">
+      <div class="hero">
+        <p class="eyebrow">👋 Karibu</p>
+        <h1>Discover dukas near you</h1>
+        <p class="sub">Browse local shops, see what they're selling, and chat directly with the owner before you buy.</p>
+      </div>
+      <div class="search-wrap" id="searchWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="shopSearch" placeholder="Search by shop name, username, location, or product">
+        <button class="clear-btn" id="clearSearch" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <p class="search-count" id="searchCount" hidden></p>
+      <div class="card-grid" id="cardArea"><div class="loading-row">Loading shops…</div></div>
+    </section>
+
+    <section class="view root" id="view-messages">
+      <div class="section-head">
+        <h1>Messages</h1>
+        <p class="sub">Your conversations with shop owners.</p>
+      </div>
+      <div class="conv-list" id="convList"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="bn-btn active" data-root="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="bn-btn" data-root="messages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span>Messages</span>
+      <span class="bn-badge" id="bottomBadge" hidden>0</span>
+    </button>
+  </nav>
+</div>
+
+<section class="view pushed" id="view-detail">
+  <div class="page-head">
+    <button class="icon-btn round" id="detailBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+    <h2>Shop details</h2>
+    <span style="width:38px"></span>
+  </div>
+  <div class="page-body" id="detailBody"></div>
+</section>
+
+<section class="view pushed" id="view-chat">
+  <div class="page-head chat-head">
+    <button class="icon-btn round" id="chatBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+    <div class="chat-head-info">
+      <div class="avatar" id="chatAvatar">?</div>
+      <div><h2 id="chatTitle">Shop</h2><span class="tiny">In-app chat</span></div>
+    </div>
+    <span style="width:38px"></span>
+  </div>
+  <div class="chat-scroll" id="chatScroll"></div>
+  <div class="composer">
+    <textarea id="chatInput" placeholder="Message the shop owner..." rows="1"></textarea>
+    <button class="send-btn" id="chatSend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+  </div>
+</section>
+
+<script>
+  /* ============ SUPABASE SETUP — paste your project values here ============ */
+  const SUPABASE_URL = 'https://YOUR-PROJECT-REF.sb.co';
+  const SUPABASE_ANON_KEY = 'YOUR-PUBLIC-ANON-KEY';
+
+  let sb = null;
+  try {
+    if(!window.supabase) throw new Error('The Supabase library did not load — check your internet connection.');
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(err) {
+    console.error('[Duka Find] Supabase failed to initialize:', err);
+  }
+  /* =========================================================================== */
+
+  const $ = sel => document.querySelector(sel);
+  const fmt = n => new Intl.NumberFormat('en-UG').format(n);
+  const escapeHtml = s => (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  const ICON_PIN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const ICON_CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+  const ICON_TRUCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6H3v11h11z"/><path d="M14 9h4l3 3v5h-7z"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="17.5" cy="18.5" r="1.5"/></svg>`;
+  const ICON_CHAT_SM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+  const ICON_STORE_LG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><path d="M3 9V7l2-4h14l2 4v2"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M4 9v10a1 1 0 0 0 1 1h4v-6h6v6h4a1 1 0 0 0 1-1V9"/></svg>`;
+  const ICON_TAG_SM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 2.6a2 2 0 0 0-1.42-.6H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .58 1.42l8.7 8.7a2.43 2.43 0 0 0 3.43 0l6.58-6.58a2.43 2.43 0 0 0 0-3.43z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>`;
+  const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const ICON_GOOGLE = `<svg viewBox="0 0 48 48" width="18" height="18"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l6-6C34.9 5.1 29.7 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l6-6C34.9 5.1 29.7 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 45c5.4 0 10.5-2.1 14.3-5.5l-6.6-5.6C29.6 35.5 26.9 36.5 24 36.5c-5.4 0-9.9-3.4-11.5-8.2l-6.6 5.1C9.6 40.6 16.2 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.9 2.6-2.6 4.7-4.9 6.2l6.6 5.6C40.9 37.2 45 31.5 45 24c0-1.3-.1-2.7-.4-3.5z"/></svg>`;
+
+  let currentUser = null;
+  let currentRoot = 'home';
+  let openConversationId = null;
+  let chatChannel = null;
+
+  /* ---------------- auth ---------------- */
+  async function signInWithGoogle(){
+    await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+  }
+  async function signOut(){
+    await sb.auth.signOut();
+    currentUser = null;
+    renderAuthArea();
+    setRoot('home');
+  }
+  function renderAuthArea(){
+    const el = $('#authArea');
+    if(currentUser){
+      const name = currentUser.user_metadata?.full_name || currentUser.email || 'You';
+      el.innerHTML = `
+        <div class="user-chip">
+          <div class="avatar">${name.charAt(0).toUpperCase()}</div>
+          <button id="logoutBtn">Log out</button>
+        </div>`;
+      $('#logoutBtn').addEventListener('click', signOut);
+    } else {
+      el.innerHTML = `<button class="auth-pill" id="loginBtn">${ICON_GOOGLE} Sign in</button>`;
+      $('#loginBtn').addEventListener('click', signInWithGoogle);
+    }
+  }
+
+  // ensure a profiles row exists for a signed-in customer
+  async function ensureCustomerProfile(user){
+    await sb.from('profiles').upsert({
+      id: user.id, role: 'customer',
+      full_name: user.user_metadata?.full_name || null,
+      email: user.email
+    });
+  }
+
+  /* ---------------- nav ---------------- */
+  function setRoot(root){
+    currentRoot = root;
+    document.querySelectorAll('.view.root').forEach(v => v.classList.toggle('active', v.id === 'view-' + root));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.root === root));
+    document.querySelectorAll('.bn-btn').forEach(b => b.classList.toggle('active', b.dataset.root === root));
+    closePushed();
+    if(root === 'messages') renderConvList();
+  }
+  document.querySelectorAll('[data-root]').forEach(btn => btn.addEventListener('click', ()=> setRoot(btn.dataset.root)));
+
+  function openPushed(id){ $(id).classList.add('active'); }
+  function closePushedOne(id){ $(id).classList.remove('active'); }
+  function closePushed(){ closePushedOne('#view-detail'); closePushedOne('#view-chat'); }
+  $('#detailBack').addEventListener('click', ()=> closePushedOne('#view-detail'));
+  $('#chatBack').addEventListener('click', ()=> { closePushedOne('#view-chat'); leaveChatChannel(); });
+
+  /* ---------------- home: shop list + search ---------------- */
+  let allShops = [];
+
+  async function fetchShops(){
+    // Only verified shops are shown to customers. Column list is explicit so
+    // tin_number never reaches the browser.
+    const { data, error } = await sb
+      .from('shops')
+      .select('id, business_name, username, location, delivery_policy, verified, shop_images(url), products(*)')
+      .eq('verified', true)
+      .order('created_at', { ascending: false });
+    if(error){ console.error(error); return []; }
+    return data;
+  }
+
+  // Matches shop name, username, location, AND every product name the shop owner has
+  // typed in on their dashboard — so searching "tomatoes" surfaces any shop selling them.
+  function filterShops(shops, query){
+    const q = query.trim().toLowerCase();
+    if(!q) return shops.map(s => ({ shop: s, matchedProduct: null }));
+    return shops
+      .map(shop => {
+        const fieldsMatch =
+          shop.business_name?.toLowerCase().includes(q) ||
+          shop.username?.toLowerCase().includes(q) ||
+          shop.location?.toLowerCase().includes(q);
+        const matchedProduct = (shop.products || []).find(p => p.name?.toLowerCase().includes(q));
+        if(fieldsMatch || matchedProduct) return { shop, matchedProduct: fieldsMatch ? null : matchedProduct };
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  function renderCards(query = ''){
+    const wrap = $('#cardArea');
+    const results = filterShops(allShops, query);
+    const countEl = $('#searchCount');
+
+    if(query.trim()){
+      countEl.hidden = false;
+      countEl.textContent = `${results.length} shop${results.length===1?'':'s'} match "${query.trim()}"`;
+    } else {
+      countEl.hidden = true;
+    }
+
+    if(allShops.length === 0){
+      wrap.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="es-icon">${ICON_STORE_LG}</div>
+          <h3>No dukas listed yet</h3>
+          <p>Once a shop owner sets up and gets verified, it'll show up here for you to browse.</p>
+        </div>`;
+      return;
+    }
+    if(results.length === 0){
+      wrap.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="es-icon">${ICON_STORE_LG}</div>
+          <h3>No matches</h3>
+          <p>Try a different shop name, username, location, or product.</p>
+        </div>`;
+      return;
+    }
+    wrap.innerHTML = results.map(({ shop, matchedProduct }) => {
+      const cover = shop.shop_images?.[0]?.url ? `background-image:url('${shop.shop_images[0].url}')` : '';
+      return `
+      <div class="shop-card" data-id="${shop.id}">
+        <div class="shop-cover" style="${cover}">
+          ${!shop.shop_images?.[0]?.url ? `<div class="shop-cover-empty">${ICON_STORE_LG}</div>` : ''}
+          <div class="shop-cover-info">
+            <h3>${escapeHtml(shop.business_name)}</h3>
+            ${shop.location ? `<span class="shop-loc">${ICON_PIN}${escapeHtml(shop.location)}</span>` : ''}
+          </div>
+        </div>
+        <div class="shop-card-foot" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <span style="font-size:0.82rem;color:var(--ink-soft);">${shop.products.length} product${shop.products.length===1?'':'s'}</span>
+            <span class="view-shop">View shop ${ICON_CHEV}</span>
+          </div>
+          ${matchedProduct ? `<span class="match-note">${ICON_TAG_SM}Sells "${escapeHtml(matchedProduct.name)}"</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    wrap.querySelectorAll('.shop-card').forEach(card=>{
+      card.addEventListener('click', ()=> openDetail(allShops.find(s => s.id === card.dataset.id)));
+    });
+  }
+
+  async function loadShops(){
+    $('#cardArea').innerHTML = `<div class="loading-row">Loading shops…</div>`;
+    allShops = await fetchShops();
+    renderCards($('#shopSearch').value);
+  }
+
+  let searchDebounce;
+  $('#shopSearch').addEventListener('input', function(){
+    $('#searchWrap').classList.toggle('has-value', this.value.length > 0);
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(()=> renderCards(this.value), 150);
+  });
+  $('#clearSearch').addEventListener('click', ()=>{
+    $('#shopSearch').value = '';
+    $('#searchWrap').classList.remove('has-value');
+    renderCards('');
+    $('#shopSearch').focus();
+  });
+
+  function openDetail(shop){
+    const cover = shop.shop_images?.[0]?.url ? `background-image:url('${shop.shop_images[0].url}')` : '';
+    const gallery = (shop.shop_images || []).slice(1).map(img => `<img src="${img.url}">`).join('');
+    const productsHtml = shop.products.length
+      ? shop.products.map(p => `
+        <div class="product-card">
+          ${p.image_url ? `<img src="${p.image_url}">` : ''}
+          <div class="product-card-body">
+            <h4>${escapeHtml(p.name)}</h4>
+            <div class="meta-row">
+              <span class="tag">UGX ${fmt(p.price)}</span>
+              ${p.negotiable ? '<span class="stamp">Negotiable</span>' : ''}
+            </div>
+            <p>${escapeHtml(p.description || '')}</p>
+          </div>
+        </div>`).join('')
+      : `<p style="color:var(--ink-soft);font-size:0.9rem;">No products listed yet — check back soon.</p>`;
+
+    $('#detailBody').innerHTML = `
+      <div class="detail-cover" style="${cover}"></div>
+      <div class="detail-content">
+        <h1>${escapeHtml(shop.business_name)}</h1>
+        ${shop.location ? `<span class="shop-loc" style="color:var(--ink-soft);">${ICON_PIN}${escapeHtml(shop.location)}</span>` : ''}
+        <div><span class="verified-badge">${ICON_CHECK} TIN verified</span></div>
+        ${gallery ? `<div class="gallery">${gallery}</div>` : ''}
+        ${shop.delivery_policy ? `<div class="policy">${ICON_TRUCK}<div><b>Delivery policy</b>${escapeHtml(shop.delivery_policy)}</div></div>` : ''}
+        <h3 style="font-size:1.08rem;margin-bottom:12px;">Products</h3>
+        <div class="products-grid">${productsHtml}</div>
+      </div>
+      <div class="sticky-cta">
+        <button class="btn btn-primary btn-block" id="talkBtn">${ICON_CHAT_SM} Talk to the business owner</button>
+      </div>`;
+    $('#talkBtn').addEventListener('click', ()=> openChat(shop.id, shop.business_name));
+    openPushed('#view-detail');
+  }
+
+  /* ---------------- messages tab: conversation list ---------------- */
+  async function renderConvList(){
+    const wrap = $('#convList');
+    if(!currentUser){
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">${ICON_CHAT_SM}</div>
+          <h3>Sign in to see your messages</h3>
+          <p>You'll need a Google account to chat with shop owners.</p>
+          <button class="google-btn" id="convSignIn">${ICON_GOOGLE} Sign in with Google</button>
+        </div>`;
+      $('#convSignIn').addEventListener('click', signInWithGoogle);
+      return;
+    }
+    const { data, error } = await sb
+      .from('conversations')
+      .select('id, shop_id, shops(business_name), messages(sender_role, body, created_at)')
+      .eq('customer_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if(error){ console.error(error); wrap.innerHTML = `<div class="empty-state"><h3>Couldn't load messages</h3></div>`; return; }
+    if(!data || data.length === 0){
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">${ICON_CHAT_SM}</div>
+          <h3>No conversations yet</h3>
+          <p>Chats you start with shop owners will show up here.</p>
+        </div>`;
+      return;
+    }
+    wrap.innerHTML = data.map(c => {
+      const msgs = (c.messages || []).slice().sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
+      const last = msgs[msgs.length - 1];
+      const unread = last && last.sender_role === 'owner';
+      const name = c.shops?.business_name || 'Shop';
+      return `
+        <div class="conv-row" data-cid="${c.id}" data-shop="${c.shop_id}" data-name="${escapeHtml(name)}">
+          <div class="avatar">${name.charAt(0).toUpperCase()}</div>
+          <div class="conv-main">
+            <div class="conv-top">
+              <h4>${escapeHtml(name)}</h4>
+              ${last ? `<span class="conv-time">${new Date(last.created_at).toLocaleDateString([], {month:'short', day:'numeric'})}</span>` : ''}
+            </div>
+            <div class="conv-preview">
+              <p>${last ? escapeHtml(last.body) : 'Say hello and ask about their products'}</p>
+              ${unread ? `<span class="dot"></span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+    wrap.querySelectorAll('.conv-row').forEach(row=>{
+      row.addEventListener('click', ()=> openChat(row.dataset.shop, row.dataset.name, row.dataset.cid));
+    });
+  }
+
+  /* ---------------- chat ---------------- */
+  async function getOrCreateConversation(shopId){
+    let { data } = await sb.from('conversations')
+      .select('*').eq('shop_id', shopId).eq('customer_id', currentUser.id).maybeSingle();
+    if(!data){
+      const { data: created, error } = await sb.from('conversations')
+        .insert({ shop_id: shopId, customer_id: currentUser.id }).select().single();
+      if(error){ console.error(error); return null; }
+      data = created;
+    }
+    return data;
+  }
+
+  async function openChat(shopId, shopName, knownConvoId){
+    if(!currentUser){ await signInWithGoogle(); return; }
+    const convo = knownConvoId ? { id: knownConvoId } : await getOrCreateConversation(shopId);
+    if(!convo) return;
+    openConversationId = convo.id;
+
+    $('#chatTitle').textContent = shopName;
+    $('#chatAvatar').textContent = (shopName || '?').charAt(0).toUpperCase();
+    $('#chatScroll').innerHTML = `<div class="loading-row">Loading chat…</div>`;
+    openPushed('#view-chat');
+
+    await loadMessages(convo.id);
+    subscribeToChat(convo.id);
+    setTimeout(()=> $('#chatInput').focus(), 300);
+  }
+
+  async function loadMessages(conversationId){
+    const { data, error } = await sb.from('messages')
+      .select('*').eq('conversation_id', conversationId).order('created_at');
+    if(error){ console.error(error); return; }
+    renderMessages(data);
+  }
+
+  function renderMessages(msgs){
+    const body = $('#chatScroll');
+    if(!msgs || msgs.length === 0){
+      body.innerHTML = `<div class="empty-chat">Say hello 👋 — ask about prices, stock, or delivery.</div>`;
+      return;
+    }
+    body.innerHTML = msgs.map(m => `
+      <div class="msg ${m.sender_role}">
+        ${escapeHtml(m.body)}
+        <time>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</time>
+      </div>`).join('');
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function subscribeToChat(conversationId){
+    leaveChatChannel();
+    chatChannel = sb
+      .channel(`conversation-${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`
+      }, () => loadMessages(conversationId))
+      .subscribe();
+  }
+  function leaveChatChannel(){
+    if(chatChannel){ sb.removeChannel(chatChannel); chatChannel = null; }
+    openConversationId = null;
+  }
+
+  async function sendChat(){
+    const input = $('#chatInput');
+    const text = input.value.trim();
+    if(!text || !openConversationId || !currentUser) return;
+    input.value = ''; input.style.height = 'auto';
+    const { error } = await sb.from('messages').insert({
+      conversation_id: openConversationId, sender_id: currentUser.id, sender_role: 'customer', body: text
+    });
+    if(error) console.error(error);
+    // realtime subscription will refresh the view; also refresh immediately for snappy feel
+    loadMessages(openConversationId);
+  }
+  $('#chatSend').addEventListener('click', sendChat);
+  $('#chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } });
+  $('#chatInput').addEventListener('input', function(){ this.style.height='auto'; this.style.height = Math.min(this.scrollHeight,110)+'px'; });
+
+  /* ---------------- unread badge (rough heuristic: any conv whose last msg is from owner) ---------------- */
+  async function updateBadges(){
+    if(!currentUser){ [$('#topBadge'),$('#bottomBadge')].forEach(el=>el.hidden=true); return; }
+    const { data } = await sb.from('conversations')
+      .select('id, messages(sender_role, created_at)').eq('customer_id', currentUser.id);
+    let unread = 0;
+    (data||[]).forEach(c=>{
+      const msgs = (c.messages||[]).slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at));
+      const last = msgs[msgs.length-1];
+      if(last && last.sender_role === 'owner') unread++;
+    });
+    [$('#topBadge'),$('#bottomBadge')].forEach(el=>{
+      if(unread>0){ el.hidden=false; el.textContent=unread; } else el.hidden=true;
+    });
+  }
+
+  /* ---------------- boot ---------------- */
+  async function init(){
+    if(!sb){
+      $('#cardArea').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="es-icon">${ICON_STORE_LG}</div>
+          <h3>Could not connect</h3>
+          <p>The required library failed to load. Check your internet connection and reload the page.</p>
+        </div>`;
+      return;
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if(session){ currentUser = session.user; await ensureCustomerProfile(currentUser); }
+    renderAuthArea();
+    await loadShops();
+    await updateBadges();
+
+    sb.auth.onAuthStateChange(async (_event, session)=>{
+      currentUser = session?.user ?? null;
+      if(currentUser) await ensureCustomerProfile(currentUser);
+      renderAuthArea();
+      await updateBadges();
+      if(currentRoot === 'messages') renderConvList();
+    });
+  }
+  init();
+</script>
+</body>
+</html>
