@@ -400,7 +400,7 @@
 
 <script>
   /* ============ SUPABASE SETUP — paste your project values here ============ */
-  const SUPABASE_URL = 'https://otxelmhzhzxgdxrkimht.supabase.co';
+  const SUPABASE_URL = 'https://otxelmhzhzxgdxrkimht.supabase.co/rest/v1/';
   const SUPABASE_ANON_KEY = 'sb_publishable_GALUSbw2z0BmuuKT43soQg_m0_LzNwO';
 
   let sb = null;
@@ -499,11 +499,23 @@
     const userId = signUpData.user?.id;
     if(!userId){ showAuthMsg('Something went wrong creating your account.', 'error'); $('#signupSubmit').disabled = false; return; }
 
-    await sb.from('profiles').insert({ id: userId, role: 'owner', full_name: fullName, email, sex });
+    const pendingProfile = { full_name: fullName, email, sex };
+    const pendingShop = { business_name: businessName, username, location, tin_number: tin };
 
-    const { error: shopError } = await sb.from('shops').insert({
-      owner_id: userId, business_name: businessName, username, location, tin_number: tin
-    });
+    if(!signUpData.session){
+      // Email confirmation is required, so we don't have an auth token yet and can't
+      // write to the database (RLS would reject it). Save what they entered and finish
+      // creating the profile/shop automatically the moment they confirm and log in.
+      localStorage.setItem('dukafind_pending_' + userId, JSON.stringify({ profile: pendingProfile, shop: pendingShop }));
+      $('#signupSubmit').disabled = false;
+      showAuthMsg('Almost done! Check your email to confirm your account, then log in — we\'ll finish setting up your shop automatically.', 'success');
+      document.querySelector('[data-tab="login"]').click();
+      return;
+    }
+
+    // Confirmation is off (or already confirmed) — we have a session, so write now.
+    await sb.from('profiles').insert({ id: userId, role: 'owner', ...pendingProfile });
+    const { error: shopError } = await sb.from('shops').insert({ owner_id: userId, ...pendingShop });
 
     $('#signupSubmit').disabled = false;
 
@@ -512,12 +524,7 @@
       return;
     }
 
-    if(!signUpData.session){
-      showAuthMsg('Shop created! Check your email to confirm your account, then log in.', 'success');
-      document.querySelector('[data-tab="login"]').click();
-    } else {
-      await bootDashboard();
-    }
+    await bootDashboard();
   });
 
   /* ================= boot / session ================= */
@@ -525,6 +532,26 @@
     const { data: { session } } = await sb.auth.getSession();
     if(!session){ return; }
     currentUser = session.user;
+
+    // First login after confirming email? Finish creating the profile/shop we
+    // stashed at signup time, now that we actually have an authenticated session.
+    const pendingKey = 'dukafind_pending_' + currentUser.id;
+    const pendingRaw = localStorage.getItem(pendingKey);
+    if(pendingRaw){
+      try{
+        const pending = JSON.parse(pendingRaw);
+        await sb.from('profiles').upsert({ id: currentUser.id, role: 'owner', ...pending.profile });
+        const { error: shopError } = await sb.from('shops').insert({ owner_id: currentUser.id, ...pending.shop });
+        if(shopError){
+          showAuthMsg(describeShopError(shopError) + ' Please contact support to finish setting up your shop.', 'error');
+          localStorage.removeItem(pendingKey);
+          return;
+        }
+        localStorage.removeItem(pendingKey);
+      }catch(err){
+        console.error('[Duka Find] Failed to complete pending shop signup:', err);
+      }
+    }
 
     const { data: shop, error } = await sb.from('shops').select('*').eq('owner_id', currentUser.id).maybeSingle();
     if(error || !shop){
