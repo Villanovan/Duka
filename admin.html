@@ -79,6 +79,12 @@
   @media(max-width:560px){.grid-2{grid-template-columns:1fr;}}
   .hint{font-size:0.78rem;color:var(--ink-faint);margin-top:5px;}
   .field-error{font-size:0.8rem;color:var(--paprika);margin-top:5px;display:none;}
+  .pin-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .btn-pin{background:var(--green-soft);color:var(--green-dark);border:none;border-radius:var(--r-pill);padding:10px 18px;font-weight:700;font-size:0.86rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
+  .btn-pin:hover{background:var(--green);color:#fff;}
+  .btn-pin:disabled{opacity:0.6;cursor:not-allowed;}
+  .pin-status{font-size:0.82rem;color:var(--ink-soft);}
+  .pin-status.ok{color:var(--green-dark);font-weight:600;}
 
   .btn{font-weight:700;font-size:0.9rem;border:none;border-radius:var(--r-pill);padding:12px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .12s,background .15s;}
   .btn:active{transform:scale(0.97);}
@@ -311,6 +317,27 @@
               <input type="file" id="shopImages" accept="image/*" multiple>
             </label>
             <div class="thumbs" id="shopThumbs"></div>
+          </div>
+          <div class="field">
+            <label>Pin your location on the map</label>
+            <div class="pin-row">
+              <button type="button" class="btn btn-pin" id="useLocationBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Use my current location
+              </button>
+              <span class="pin-status" id="pinStatus">Not pinned yet</span>
+            </div>
+            <div class="grid-2" style="margin-top:12px;">
+              <div class="field" style="margin-bottom:0;">
+                <label for="bizLat">Latitude</label>
+                <input type="number" id="bizLat" step="any" placeholder="e.g. 0.3476">
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label for="bizLng">Longitude</label>
+                <input type="number" id="bizLng" step="any" placeholder="e.g. 32.5825">
+              </div>
+            </div>
+            <p class="hint">This is what places your shop on customers' Map tab. Manual entry works too if location access isn't available.</p>
           </div>
           <button class="btn btn-primary" id="saveProfile">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -605,12 +632,47 @@
     $('#bizUsername').value = currentShop.username || '';
     $('#bizLocation').value = currentShop.location || '';
     $('#bizDelivery').value = currentShop.delivery_policy || '';
+    $('#bizLat').value = currentShop.latitude ?? '';
+    $('#bizLng').value = currentShop.longitude ?? '';
+    updatePinStatus();
     $('#tinDisplay').textContent = 'TIN ' + currentShop.tin_number;
     const badge = $('#verifyBadge');
     if(currentShop.verified){ badge.textContent = 'Verified'; badge.className = 'verified-badge ok'; }
     else { badge.textContent = 'Pending review'; badge.className = 'verified-badge pending'; }
     await renderShopThumbs();
   }
+
+  function updatePinStatus(){
+    const lat = $('#bizLat').value, lng = $('#bizLng').value;
+    const el = $('#pinStatus');
+    if(lat && lng){ el.textContent = 'Pinned ✓'; el.className = 'pin-status ok'; }
+    else { el.textContent = 'Not pinned yet'; el.className = 'pin-status'; }
+  }
+
+  $('#useLocationBtn').addEventListener('click', ()=>{
+    if(!navigator.geolocation){ toast('Location access is not available in this browser'); return; }
+    const btn = $('#useLocationBtn');
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Locating…';
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        $('#bizLat').value = pos.coords.latitude.toFixed(6);
+        $('#bizLng').value = pos.coords.longitude.toFixed(6);
+        updatePinStatus();
+        btn.disabled = false; btn.innerHTML = originalText;
+        toast('Location captured — remember to save');
+      },
+      err=>{
+        console.error(err);
+        btn.disabled = false; btn.innerHTML = originalText;
+        toast('Could not get your location — you can enter latitude/longitude manually instead');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+  $('#bizLat').addEventListener('input', updatePinStatus);
+  $('#bizLng').addEventListener('input', updatePinStatus);
 
   async function renderShopThumbs(){
     const { data: images } = await sb.from('shop_images').select('*').eq('shop_id', currentShop.id).order('sort_order');
@@ -644,11 +706,15 @@
       toast('Username must be 3-20 characters: letters, numbers, underscores only');
       return;
     }
+    const latRaw = $('#bizLat').value.trim();
+    const lngRaw = $('#bizLng').value.trim();
     const { error } = await sb.from('shops').update({
       business_name: name,
       username,
       location: $('#bizLocation').value.trim(),
-      delivery_policy: $('#bizDelivery').value.trim()
+      delivery_policy: $('#bizDelivery').value.trim(),
+      latitude: latRaw ? Number(latRaw) : null,
+      longitude: lngRaw ? Number(lngRaw) : null
     }).eq('id', currentShop.id);
     if(error){ toast(describeShopError(error)); console.error(error); return; }
     currentShop.business_name = name;
@@ -806,7 +872,7 @@
   }
 
   function subscribeToChat(conversationId){
-    leaveChatChannel();
+    unsubscribeChannel();
     chatChannel = sb
       .channel(`owner-conversation-${conversationId}`)
       .on('postgres_changes', {
@@ -814,8 +880,15 @@
       }, ()=> loadMessages(conversationId))
       .subscribe();
   }
-  function leaveChatChannel(){
+  // Only tears down the realtime channel — safe to call while switching between
+  // conversations, since it does NOT touch openConversationId.
+  function unsubscribeChannel(){
     if(chatChannel){ sb.removeChannel(chatChannel); chatChannel = null; }
+  }
+  // Fully leaving the chat screen: tear down the channel AND forget which
+  // conversation was open.
+  function leaveChatChannel(){
+    unsubscribeChannel();
     openConversationId = null;
   }
 
