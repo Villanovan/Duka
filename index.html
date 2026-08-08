@@ -139,6 +139,9 @@
   .product-card-body h4{font-family:'Fraunces',serif;font-size:0.98rem;margin:0 0 7px;}
   .product-card-body p{font-size:0.8rem;color:var(--ink-soft);margin:8px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .meta-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+  .product-talk-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:10px;background:var(--green-soft);color:var(--green-dark);border:none;padding:8px 10px;border-radius:var(--r-pill);font-size:0.78rem;font-weight:700;cursor:pointer;}
+  .product-talk-btn svg{width:14px;height:14px;}
+  .product-talk-btn:hover{background:var(--green);color:#fff;}
   .tag{position:relative;display:inline-flex;align-items:center;background:var(--mango);color:var(--green-dark);padding:3px 12px 3px 18px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:0.76rem;clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%);}
   .tag::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--cream);}
   .stamp{display:inline-flex;align-items:center;border:1.6px solid var(--paprika);color:var(--paprika);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:0.6rem;letter-spacing:.07em;padding:2px 7px;border-radius:5px;transform:rotate(-4deg);font-weight:700;}
@@ -197,6 +200,7 @@
       <div class="top-right">
         <nav class="top-nav">
           <button class="nav-btn active" data-root="home">Home</button>
+          <button class="nav-btn" data-root="map">Map</button>
           <button class="nav-btn" data-root="messages">Messages <span class="nav-badge" id="topBadge" hidden>0</span></button>
         </nav>
         <div id="authArea"></div>
@@ -222,6 +226,12 @@
       <div class="card-grid" id="cardArea"><div class="loading-row">Loading shops…</div></div>
     </section>
 
+    <section class="view root" id="view-map" style="padding-top:0;">
+      <div id="mapContainer" style="height:calc(100dvh - 200px);min-height:420px;border-radius:var(--r-lg);overflow:hidden;background:var(--cream-deep);position:relative;">
+        <div class="loading-row" id="mapPlaceholder" style="padding-top:80px;">Loading map…</div>
+      </div>
+    </section>
+
     <section class="view root" id="view-messages">
       <div class="section-head">
         <h1>Messages</h1>
@@ -235,6 +245,10 @@
     <button class="bn-btn active" data-root="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>
       <span>Home</span>
+    </button>
+    <button class="bn-btn" data-root="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+      <span>Map</span>
     </button>
     <button class="bn-btn" data-root="messages">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
@@ -258,7 +272,7 @@
     <button class="icon-btn round" id="chatBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
     <div class="chat-head-info">
       <div class="avatar" id="chatAvatar">?</div>
-      <div><h2 id="chatTitle">Shop</h2><span class="tiny">In-app chat</span></div>
+      <div><h2 id="chatTitle">Shop</h2><span class="tiny" id="chatSubtitle">In-app chat</span></div>
     </div>
     <span style="width:38px"></span>
   </div>
@@ -273,6 +287,7 @@
   /* ============ SUPABASE SETUP — paste your project values here ============ */
   const SUPABASE_URL = 'https://otxelmhzhzxgdxrkimht.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_GALUSbw2z0BmuuKT43soQg_m0_LzNwO';
+  const GOOGLE_MAPS_API_KEY = 'YOUR-GOOGLE-MAPS-API-KEY';
 
   let sb = null;
   try {
@@ -344,6 +359,7 @@
     document.querySelectorAll('.bn-btn').forEach(b => b.classList.toggle('active', b.dataset.root === root));
     closePushed();
     if(root === 'messages') renderConvList();
+    if(root === 'map') initMapTab();
   }
   document.querySelectorAll('[data-root]').forEach(btn => btn.addEventListener('click', ()=> setRoot(btn.dataset.root)));
 
@@ -361,7 +377,7 @@
     // tin_number never reaches the browser.
     const { data, error } = await sb
       .from('shops')
-      .select('id, business_name, username, location, delivery_policy, verified, shop_images(url), products(*)')
+      .select('id, business_name, username, location, delivery_policy, verified, latitude, longitude, shop_images(url), products(*)')
       .eq('verified', true)
       .order('created_at', { ascending: false });
     if(error){ console.error(error); return []; }
@@ -460,23 +476,115 @@
     $('#shopSearch').focus();
   });
 
+  /* ---------------- map tab ---------------- */
+  let mapScriptLoading = null;
+  let gMap = null;
+  let mapMarkers = [];
+
+  function loadGoogleMapsScript(){
+    if(window.google?.maps) return Promise.resolve();
+    if(mapScriptLoading) return mapScriptLoading;
+    mapScriptLoading = new Promise((resolve, reject)=>{
+      window.__dukaFindMapReady = () => resolve();
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=__dukaFindMapReady`;
+      script.async = true;
+      script.onerror = () => reject(new Error('Failed to load Google Maps'));
+      document.head.appendChild(script);
+    });
+    return mapScriptLoading;
+  }
+
+  async function initMapTab(){
+    if(GOOGLE_MAPS_API_KEY.includes('YOUR-GOOGLE-MAPS-API-KEY')){
+      $('#mapContainer').innerHTML = `
+        <div class="empty-state" style="margin:20px;">
+          <div class="es-icon">${ICON_STORE_LG}</div>
+          <h3>Map not set up yet</h3>
+          <p>A Google Maps API key needs to be added to this file before the map can load.</p>
+        </div>`;
+      return;
+    }
+    try{
+      await loadGoogleMapsScript();
+    }catch(err){
+      console.error(err);
+      $('#mapContainer').innerHTML = `<div class="empty-state" style="margin:20px;"><h3>Could not load the map</h3><p>Check your internet connection and try again.</p></div>`;
+      return;
+    }
+
+    const pinned = allShops.filter(s => s.latitude != null && s.longitude != null);
+    if(!gMap){
+      $('#mapContainer').innerHTML = '';
+      const center = pinned.length
+        ? { lat: pinned[0].latitude, lng: pinned[0].longitude }
+        : { lat: 0.3476, lng: 32.5825 }; // Kampala, as a sensible default
+      gMap = new google.maps.Map($('#mapContainer'), { center, zoom: pinned.length ? 13 : 12 });
+    }
+
+    mapMarkers.forEach(m => m.setMap(null));
+    mapMarkers = [];
+
+    if(pinned.length === 0){
+      const notice = document.createElement('div');
+      notice.className = 'empty-state';
+      notice.style.cssText = 'position:absolute;top:16px;left:16px;right:16px;z-index:1;max-width:360px;';
+      notice.innerHTML = `<h3 style="font-size:0.95rem;">No pinned shops yet</h3><p style="font-size:0.85rem;">Shops will appear here once their owner sets a location.</p>`;
+      $('#mapContainer').appendChild(notice);
+      return;
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+    pinned.forEach(shop=>{
+      const marker = new google.maps.Marker({
+        position: { lat: shop.latitude, lng: shop.longitude },
+        map: gMap,
+        title: shop.business_name
+      });
+      const info = new google.maps.InfoWindow({
+        content: `<div style="font-family:'Inter',sans-serif;padding:2px;">
+          <strong>${escapeHtml(shop.business_name)}</strong><br>
+          <span style="color:#5C6B5F;font-size:0.85rem;">${escapeHtml(shop.location || '')}</span><br>
+          <button id="mapViewShop-${shop.id}" style="margin-top:8px;background:#2E6E4E;color:#fff;border:none;border-radius:999px;padding:6px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;">View shop</button>
+        </div>`
+      });
+      marker.addListener('click', ()=>{
+        info.open({ anchor: marker, map: gMap });
+        google.maps.event.addListenerOnce(info, 'domready', ()=>{
+          $('#mapViewShop-' + shop.id)?.addEventListener('click', ()=> openDetail(shop));
+        });
+      });
+      mapMarkers.push(marker);
+      bounds.extend(marker.getPosition());
+    });
+    if(pinned.length > 1) gMap.fitBounds(bounds);
+  }
+
+  function renderProductCards(products, query = ''){
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? products.filter(p => p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q))
+      : products;
+    if(products.length === 0) return `<p style="color:var(--ink-soft);font-size:0.9rem;">No products listed yet — check back soon.</p>`;
+    if(filtered.length === 0) return `<p style="color:var(--ink-soft);font-size:0.9rem;">No products match "${escapeHtml(query.trim())}".</p>`;
+    return filtered.map(p => `
+      <div class="product-card">
+        ${p.image_url ? `<img src="${p.image_url}">` : ''}
+        <div class="product-card-body">
+          <h4>${escapeHtml(p.name)}</h4>
+          <div class="meta-row">
+            <span class="tag">UGX ${fmt(p.price)}</span>
+            ${p.negotiable ? '<span class="stamp">Negotiable</span>' : ''}
+          </div>
+          <p>${escapeHtml(p.description || '')}</p>
+          <button class="product-talk-btn" data-product="${escapeHtml(p.name)}">${ICON_CHAT_SM} Talk about this</button>
+        </div>
+      </div>`).join('');
+  }
+
   function openDetail(shop){
     const cover = shop.shop_images?.[0]?.url ? `background-image:url('${shop.shop_images[0].url}')` : '';
     const gallery = (shop.shop_images || []).slice(1).map(img => `<img src="${img.url}">`).join('');
-    const productsHtml = shop.products.length
-      ? shop.products.map(p => `
-        <div class="product-card">
-          ${p.image_url ? `<img src="${p.image_url}">` : ''}
-          <div class="product-card-body">
-            <h4>${escapeHtml(p.name)}</h4>
-            <div class="meta-row">
-              <span class="tag">UGX ${fmt(p.price)}</span>
-              ${p.negotiable ? '<span class="stamp">Negotiable</span>' : ''}
-            </div>
-            <p>${escapeHtml(p.description || '')}</p>
-          </div>
-        </div>`).join('')
-      : `<p style="color:var(--ink-soft);font-size:0.9rem;">No products listed yet — check back soon.</p>`;
 
     $('#detailBody').innerHTML = `
       <div class="detail-cover" style="${cover}"></div>
@@ -487,13 +595,43 @@
         ${gallery ? `<div class="gallery">${gallery}</div>` : ''}
         ${shop.delivery_policy ? `<div class="policy">${ICON_TRUCK}<div><b>Delivery policy</b>${escapeHtml(shop.delivery_policy)}</div></div>` : ''}
         <h3 style="font-size:1.08rem;margin-bottom:12px;">Products</h3>
-        <div class="products-grid">${productsHtml}</div>
+        ${shop.products.length ? `
+        <div class="search-wrap" id="productSearchWrap" style="max-width:100%;margin-bottom:16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="productSearch" placeholder="Search products in this shop">
+          <button class="clear-btn" id="clearProductSearch" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>` : ''}
+        <div class="products-grid" id="detailProductsGrid">${renderProductCards(shop.products)}</div>
       </div>
       <div class="sticky-cta">
         <button class="btn btn-primary btn-block" id="talkBtn">${ICON_CHAT_SM} Talk to the business owner</button>
       </div>`;
+
     $('#talkBtn').addEventListener('click', ()=> openChat(shop.id, shop.business_name));
+    bindProductTalkButtons(shop);
+
+    if(shop.products.length){
+      const searchInput = $('#productSearch');
+      searchInput.addEventListener('input', function(){
+        $('#productSearchWrap').classList.toggle('has-value', this.value.length > 0);
+        $('#detailProductsGrid').innerHTML = renderProductCards(shop.products, this.value);
+        bindProductTalkButtons(shop);
+      });
+      $('#clearProductSearch').addEventListener('click', ()=>{
+        searchInput.value = '';
+        $('#productSearchWrap').classList.remove('has-value');
+        $('#detailProductsGrid').innerHTML = renderProductCards(shop.products);
+        bindProductTalkButtons(shop);
+        searchInput.focus();
+      });
+    }
     openPushed('#view-detail');
+  }
+
+  function bindProductTalkButtons(shop){
+    document.querySelectorAll('.product-talk-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> openChat(shop.id, shop.business_name, null, btn.dataset.product));
+    });
   }
 
   /* ---------------- messages tab: conversation list ---------------- */
@@ -563,7 +701,7 @@
     return data;
   }
 
-  async function openChat(shopId, shopName, knownConvoId){
+  async function openChat(shopId, shopName, knownConvoId, productName){
     if(!currentUser){ await signInWithGoogle(); return; }
     const convo = knownConvoId ? { id: knownConvoId } : await getOrCreateConversation(shopId);
     if(!convo) return;
@@ -571,12 +709,24 @@
 
     $('#chatTitle').textContent = shopName;
     $('#chatAvatar').textContent = (shopName || '?').charAt(0).toUpperCase();
+    $('#chatSubtitle').textContent = productName ? `Asking about "${productName}"` : 'In-app chat';
     $('#chatScroll').innerHTML = `<div class="loading-row">Loading chat…</div>`;
     openPushed('#view-chat');
 
+    // Prefill the message so the shop owner sees the product name the moment it's sent —
+    // the customer can still edit or add to it before hitting send.
+    if(productName){
+      $('#chatInput').value = `Hi! I'm interested in "${productName}" — `;
+      $('#chatInput').dispatchEvent(new Event('input'));
+    }
+
     await loadMessages(convo.id);
     subscribeToChat(convo.id);
-    setTimeout(()=> $('#chatInput').focus(), 300);
+    setTimeout(()=>{
+      const input = $('#chatInput');
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }, 300);
   }
 
   async function loadMessages(conversationId){
@@ -601,7 +751,7 @@
   }
 
   function subscribeToChat(conversationId){
-    leaveChatChannel();
+    unsubscribeChannel();
     chatChannel = sb
       .channel(`conversation-${conversationId}`)
       .on('postgres_changes', {
@@ -610,8 +760,15 @@
       }, () => loadMessages(conversationId))
       .subscribe();
   }
-  function leaveChatChannel(){
+  // Only tears down the realtime channel — safe to call while switching between
+  // conversations, since it does NOT touch openConversationId.
+  function unsubscribeChannel(){
     if(chatChannel){ sb.removeChannel(chatChannel); chatChannel = null; }
+  }
+  // Fully leaving the chat screen: tear down the channel AND forget which
+  // conversation was open.
+  function leaveChatChannel(){
+    unsubscribeChannel();
     openConversationId = null;
   }
 
@@ -648,6 +805,17 @@
   }
 
   /* ---------------- boot ---------------- */
+  // Registered first and immediately: supabase-js fires this once on load (with the
+  // session it detects from the redirect URL, if any) and again on every future
+  // sign-in/sign-out — so this alone keeps the UI correct no matter the timing.
+  sb?.auth.onAuthStateChange(async (_event, session)=>{
+    currentUser = session?.user ?? null;
+    if(currentUser) await ensureCustomerProfile(currentUser);
+    renderAuthArea();
+    await updateBadges();
+    if(currentRoot === 'messages') renderConvList();
+  });
+
   async function init(){
     if(!sb){
       $('#cardArea').innerHTML = `
@@ -658,19 +826,15 @@
         </div>`;
       return;
     }
-    const { data: { session } } = await sb.auth.getSession();
-    if(session){ currentUser = session.user; await ensureCustomerProfile(currentUser); }
-    renderAuthArea();
     await loadShops();
-    await updateBadges();
-
-    sb.auth.onAuthStateChange(async (_event, session)=>{
-      currentUser = session?.user ?? null;
-      if(currentUser) await ensureCustomerProfile(currentUser);
+    // Fallback first paint in case onAuthStateChange's initial firing hasn't landed yet.
+    const { data: { session } } = await sb.auth.getSession();
+    if(session){
+      currentUser = session.user;
+      await ensureCustomerProfile(currentUser);
       renderAuthArea();
-      await updateBadges();
-      if(currentRoot === 'messages') renderConvList();
-    });
+    }
+    await updateBadges();
   }
   init();
 </script>
