@@ -157,6 +157,19 @@
   .empty-chat{margin:auto;text-align:center;color:var(--ink-soft);font-size:0.88rem;max-width:30ch;}
 
   .composer{flex:none;display:flex;align-items:flex-end;gap:10px;padding:14px 20px;padding-bottom:max(14px, env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);}
+  .attach-btn{width:44px;height:44px;border-radius:50%;background:var(--cream);color:var(--ink-soft);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+  .attach-btn:hover{background:var(--green-soft);color:var(--green-dark);border-color:var(--green-soft);}
+  .image-preview-bar{flex:none;display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--paper);border-top:1px solid var(--line);font-size:0.82rem;color:var(--ink-soft);}
+  .image-preview-bar img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+  .image-preview-bar button{margin-left:auto;background:none;border:none;color:var(--ink-faint);cursor:pointer;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .image-preview-bar button:hover{background:var(--cream-deep);}
+  .msg img.chat-img{max-width:100%;border-radius:10px;display:block;cursor:zoom-in;}
+  .msg img.chat-img + span{margin-top:6px;display:block;}
+  .lightbox{position:fixed;inset:0;background:rgba(20,28,20,0.88);z-index:90;display:none;align-items:center;justify-content:center;padding:24px;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+  .lightbox-close{position:absolute;top:20px;right:20px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .lightbox-close:hover{background:rgba(255,255,255,0.28);}
   .composer textarea{flex:1;resize:none;max-height:120px;min-height:44px;border:1.6px solid var(--line);border-radius:20px;padding:11px 16px;font-size:0.9rem;background:var(--cream);color:var(--ink);}
   .composer textarea:focus{outline:none;border-color:var(--green);}
   .send-btn{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;transition:background .15s,transform .12s;}
@@ -235,6 +248,12 @@
         <input type="text" id="suUsername" placeholder="e.g. mama_grace" pattern="[a-zA-Z0-9_]{3,20}" required>
         <p class="hint">Letters, numbers and underscores only. Customers can search for this to find you directly.</p>
       </div>
+      <div class="field">
+        <label for="suCategory">Business category</label>
+        <select id="suCategory" required>
+          <option value="" disabled selected>Select…</option>
+        </select>
+      </div>
       <div class="field"><label for="suLocation">Initial location</label><input type="text" id="suLocation" required></div>
       <div class="field">
         <label for="suTin">Business TIN number</label>
@@ -298,6 +317,13 @@
           <div class="field">
             <label for="bizName">Business name</label>
             <input type="text" id="bizName" placeholder="e.g. Mama Grace General Store">
+          </div>
+          <div class="field">
+            <label for="bizCategory">Business category</label>
+            <select id="bizCategory">
+              <option value="" disabled>Select…</option>
+            </select>
+            <p class="hint">Shown as a filter customers can browse by on the home page.</p>
           </div>
           <div class="grid-2">
             <div class="field">
@@ -417,11 +443,27 @@
     <span style="width:38px"></span>
   </div>
   <div class="chat-scroll" id="chatScroll"></div>
+  <div class="image-preview-bar" id="imagePreviewBar" hidden>
+    <img id="imagePreviewThumb">
+    <span>Image attached</span>
+    <button id="removeImagePreview" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
   <div class="composer">
+    <button class="attach-btn" id="attachImageBtn" type="button" title="Attach an image">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    </button>
+    <input type="file" id="chatImageInput" accept="image/*" hidden>
     <textarea id="replyText" placeholder="Type a reply..." rows="1"></textarea>
     <button class="send-btn" id="sendReply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
   </div>
 </section>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  <img id="lightboxImg" src="">
+</div>
 
 <div id="toast"></div>
 
@@ -463,6 +505,24 @@
   let currentRoot = 'profile';
   let openConversationId = null;
   let chatChannel = null;
+
+  const CATEGORIES = [
+    { value:'clothing', label:'Clothing' },
+    { value:'cosmetics', label:'Cosmetics' },
+    { value:'electronics', label:'Electronics' },
+    { value:'hardware', label:'Hardware' },
+    { value:'plastics', label:'Plastics' },
+    { value:'furniture', label:'Furniture' },
+    { value:'retail', label:'Retail' },
+    { value:'wholesale', label:'Wholesale' },
+    { value:'other', label:'Other' }
+  ];
+  function populateCategorySelects(){
+    const opts = CATEGORIES.map(c => `<option value="${c.value}">${c.label}</option>`).join('');
+    $('#suCategory').insertAdjacentHTML('beforeend', opts);
+    $('#bizCategory').insertAdjacentHTML('beforeend', opts);
+  }
+  populateCategorySelects();
 
   /* ================= AUTH GATE ================= */
   document.querySelectorAll('.auth-tab').forEach(tab=>{
@@ -511,6 +571,7 @@
     const sex = $('#suSex').value;
     const businessName = $('#suBusiness').value.trim();
     const username = $('#suUsername').value.trim().toLowerCase();
+    const category = $('#suCategory').value;
     const location = $('#suLocation').value.trim();
     const tin = $('#suTin').value.trim();
 
@@ -527,7 +588,7 @@
     if(!userId){ showAuthMsg('Something went wrong creating your account.', 'error'); $('#signupSubmit').disabled = false; return; }
 
     const pendingProfile = { full_name: fullName, email, sex };
-    const pendingShop = { business_name: businessName, username, location, tin_number: tin };
+    const pendingShop = { business_name: businessName, username, category, location, tin_number: tin };
 
     if(!signUpData.session){
       // Email confirmation is required, so we don't have an auth token yet and can't
@@ -630,6 +691,7 @@
   async function loadProfile(){
     $('#bizName').value = currentShop.business_name || '';
     $('#bizUsername').value = currentShop.username || '';
+    $('#bizCategory').value = currentShop.category || '';
     $('#bizLocation').value = currentShop.location || '';
     $('#bizDelivery').value = currentShop.delivery_policy || '';
     $('#bizLat').value = currentShop.latitude ?? '';
@@ -711,6 +773,7 @@
     const { error } = await sb.from('shops').update({
       business_name: name,
       username,
+      category: $('#bizCategory').value || null,
       location: $('#bizLocation').value.trim(),
       delivery_policy: $('#bizDelivery').value.trim(),
       latitude: latRaw ? Number(latRaw) : null,
@@ -865,11 +928,23 @@
     }
     body.innerHTML = msgs.map(m => `
       <div class="msg ${m.sender_role}">
-        ${escapeHtml(m.body)}
+        ${m.image_url ? `<img class="chat-img" src="${m.image_url}" data-lightbox="${m.image_url}">` : ''}
+        ${m.body ? `<span>${escapeHtml(m.body)}</span>` : ''}
         <time>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</time>
       </div>`).join('');
     body.scrollTop = body.scrollHeight;
+    bindLightboxImages();
   }
+
+  function bindLightboxImages(){
+    document.querySelectorAll('[data-lightbox]').forEach(img=>{
+      img.addEventListener('click', ()=> openLightbox(img.dataset.lightbox));
+    });
+  }
+  function openLightbox(url){ $('#lightboxImg').src = url; $('#lightbox').classList.add('open'); }
+  function closeLightbox(){ $('#lightbox').classList.remove('open'); $('#lightboxImg').src = ''; }
+  $('#lightboxClose').addEventListener('click', closeLightbox);
+  $('#lightbox').addEventListener('click', e=>{ if(e.target.id === 'lightbox') closeLightbox(); });
 
   function subscribeToChat(conversationId){
     unsubscribeChannel();
@@ -892,14 +967,60 @@
     openConversationId = null;
   }
 
+  /* ---------------- chat image attach ---------------- */
+  let pendingChatImage = null; // { file, previewUrl }
+
+  $('#attachImageBtn').addEventListener('click', ()=> $('#chatImageInput').click());
+  $('#chatImageInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    pendingChatImage = { file, previewUrl: URL.createObjectURL(file) };
+    $('#imagePreviewThumb').src = pendingChatImage.previewUrl;
+    $('#imagePreviewBar').hidden = false;
+    e.target.value = '';
+  });
+  $('#removeImagePreview').addEventListener('click', ()=>{
+    if(pendingChatImage) URL.revokeObjectURL(pendingChatImage.previewUrl);
+    pendingChatImage = null;
+    $('#imagePreviewBar').hidden = true;
+  });
+
+  async function uploadChatImage(file){
+    const path = `${currentUser.id}/${Date.now()}-${file.name}`;
+    const { error } = await sb.storage.from('chat-images').upload(path, file);
+    if(error) throw error;
+    return sb.storage.from('chat-images').getPublicUrl(path).data.publicUrl;
+  }
+
   async function sendReply(){
     const input = $('#replyText');
     const text = input.value.trim();
-    if(!text || !openConversationId) return;
+    if((!text && !pendingChatImage) || !openConversationId) return;
+
+    const sendBtn = $('#sendReply');
+    sendBtn.disabled = true;
+
+    let imageUrl = null;
+    if(pendingChatImage){
+      try{
+        imageUrl = await uploadChatImage(pendingChatImage.file);
+      }catch(err){
+        console.error(err);
+        sendBtn.disabled = false;
+        toast('Could not send the image — please try again');
+        return;
+      }
+    }
+
     input.value = ''; input.style.height = 'auto';
+    if(pendingChatImage){ URL.revokeObjectURL(pendingChatImage.previewUrl); pendingChatImage = null; }
+    $('#imagePreviewBar').hidden = true;
+
     const { error } = await sb.from('messages').insert({
-      conversation_id: openConversationId, sender_id: currentUser.id, sender_role: 'owner', body: text
+      conversation_id: openConversationId, sender_id: currentUser.id, sender_role: 'owner',
+      body: text || null, image_url: imageUrl
     });
+    sendBtn.disabled = false;
     if(error) console.error(error);
     loadMessages(openConversationId);
   }
