@@ -76,6 +76,29 @@
   .match-note{display:flex;align-items:center;gap:5px;font-size:0.76rem;color:var(--green-dark);background:var(--green-soft);padding:4px 10px;border-radius:var(--r-pill);margin-top:8px;width:fit-content;}
   .match-note svg{width:13px;height:13px;}
   .search-count{color:var(--ink-faint);font-size:0.82rem;margin:-14px 0 18px;}
+  .category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:22px;}
+  .category-card{position:relative;aspect-ratio:3/4;border-radius:var(--r-lg);overflow:hidden;cursor:pointer;border:none;padding:0;text-align:left;background:var(--cat-grad);transition:transform .18s,box-shadow .18s;box-shadow:var(--shadow-sm);}
+  .category-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .category-card.active{outline:3px solid var(--green); outline-offset:2px;}
+  .category-card .cat-photo{position:absolute;inset:0;background-size:cover;background-position:center;}
+  .category-card .cat-overlay{position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 100%);}
+  .category-card .cat-icon{position:absolute;top:14px;left:14px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.22);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;color:#fff;}
+  .category-card .cat-icon svg{width:18px;height:18px;}
+  .category-card .cat-body{position:absolute;left:14px;right:14px;bottom:12px;color:#fff;}
+  .category-card .cat-body h3{color:#fff;font-size:1.02rem;margin:0 0 2px;}
+  .category-card .cat-stat{font-size:0.72rem;opacity:0.85;display:block;margin-bottom:8px;}
+  .category-card .cat-explore{display:inline-flex;align-items:center;gap:4px;font-size:0.76rem;font-weight:700;color:#fff;}
+  .category-card .cat-explore svg{width:13px;height:13px;transition:transform .15s;}
+  .category-card:hover .cat-explore svg{transform:translateX(3px);}
+  .cat-clothing{--cat-grad:linear-gradient(160deg,#2c5364,#203a43,#0f2027);}
+  .cat-cosmetics{--cat-grad:linear-gradient(160deg,#e195ab,#c06c94,#6b3a5e);}
+  .cat-electronics{--cat-grad:linear-gradient(160deg,#3a7bd5,#2c5f8a,#142b42);}
+  .cat-hardware{--cat-grad:linear-gradient(160deg,#7d6354,#5a4536,#2e241c);}
+  .cat-plastics{--cat-grad:linear-gradient(160deg,#38ada9,#2c8c89,#155e59);}
+  .cat-furniture{--cat-grad:linear-gradient(160deg,#c99a5b,#9c6e3e,#5c3f24);}
+  .cat-retail{--cat-grad:linear-gradient(160deg,#eda93a,#c6812a,#8a541a);}
+  .cat-wholesale{--cat-grad:linear-gradient(160deg,#556270,#3a4750,#1f262b);}
+  .cat-other{--cat-grad:linear-gradient(160deg,#2e6e4e,#1b4a32,#0e2c1e);}
   .section-head{margin-bottom:20px;}
   .section-head h1{font-size:1.7rem;}
   .section-head .sub{color:var(--ink-soft);margin:6px 0 0;}
@@ -131,22 +154,30 @@
   .verified-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-soft);color:var(--green-dark);font-size:0.74rem;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);margin-top:8px;}
   .verified-badge svg{width:14px;height:14px;}
 
-  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
-  .product-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;transition:transform .15s;}
-  .product-card:hover{transform:translateY(-2px);}
-  .product-card img{width:100%;height:120px;object-fit:cover;display:block;background:var(--cream-deep);}
-  .product-card-body{padding:12px 13px 14px;}
-  .product-card-body h4{font-family:'Fraunces',serif;font-size:0.98rem;margin:0 0 7px;}
-  .product-card-body p{font-size:0.8rem;color:var(--ink-soft);margin:8px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-  .meta-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
-  .product-talk-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:10px;background:var(--green-soft);color:var(--green-dark);border:none;padding:8px 10px;border-radius:var(--r-pill);font-size:0.78rem;font-weight:700;cursor:pointer;}
+  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;align-items:stretch;}
+  .product-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;height:100%;}
+  .product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .product-img-wrap{position:relative;flex:none;background:var(--cream-deep);}
+  .product-img-wrap img{width:100%;height:120px;object-fit:cover;display:block;cursor:zoom-in;}
+  .product-img-wrap:not(.has-img){height:120px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);}
+  .product-card-body{padding:12px 13px 13px;display:flex;flex-direction:column;flex:1;gap:5px;}
+  .product-card-body h4{font-family:'Fraunces',serif;font-size:0.97rem;margin:0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .meta-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:20px;}
+  .product-card-body p.product-desc{font-size:0.8rem;color:var(--ink-soft);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;}
+  .product-talk-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:var(--green-soft);color:var(--green-dark);border:none;padding:8px 10px;border-radius:var(--r-pill);font-size:0.78rem;font-weight:700;cursor:pointer;}
   .product-talk-btn svg{width:14px;height:14px;}
   .product-talk-btn:hover{background:var(--green);color:#fff;}
   .tag{position:relative;display:inline-flex;align-items:center;background:var(--mango);color:var(--green-dark);padding:3px 12px 3px 18px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:0.76rem;clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%);}
   .tag::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--cream);}
-  .stamp{display:inline-flex;align-items:center;border:1.6px solid var(--paprika);color:var(--paprika);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:0.6rem;letter-spacing:.07em;padding:2px 7px;border-radius:5px;transform:rotate(-4deg);font-weight:700;}
+  .neg-note{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;color:var(--ink-faint);font-weight:600;}
+  .neg-note::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--ink-faint);}
 
-  .sticky-cta{position:sticky;bottom:0;background:linear-gradient(0deg,var(--cream) 60%,rgba(252,247,236,0));padding:22px 20px 18px;}
+  .lightbox{position:fixed;inset:0;background:rgba(20,28,20,0.88);z-index:90;display:none;align-items:center;justify-content:center;padding:24px;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+  .lightbox-close{position:absolute;top:20px;right:20px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .lightbox-close:hover{background:rgba(255,255,255,0.28);}
+
   .btn{font-weight:700;font-size:0.94rem;border:none;border-radius:var(--r-pill);padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .15s;}
   .btn:active{transform:scale(0.97);}
   .btn-block{width:100%;max-width:760px;margin:0 auto;display:flex;}
@@ -165,6 +196,14 @@
   .empty-chat{margin:auto;text-align:center;color:var(--ink-soft);font-size:0.88rem;max-width:26ch;}
 
   .composer{flex:none;display:flex;align-items:flex-end;gap:10px;padding:12px 14px;padding-bottom:max(12px, env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);}
+  .attach-btn{width:44px;height:44px;border-radius:50%;background:var(--cream);color:var(--ink-soft);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+  .attach-btn:hover{background:var(--green-soft);color:var(--green-dark);border-color:var(--green-soft);}
+  .image-preview-bar{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--paper);border-top:1px solid var(--line);font-size:0.82rem;color:var(--ink-soft);}
+  .image-preview-bar img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+  .image-preview-bar button{margin-left:auto;background:none;border:none;color:var(--ink-faint);cursor:pointer;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .image-preview-bar button:hover{background:var(--cream-deep);}
+  .msg img.chat-img{max-width:100%;border-radius:10px;display:block;cursor:zoom-in;}
+  .msg img.chat-img + .msg-caption{margin-top:6px;}
   .composer textarea{flex:1;resize:none;max-height:110px;border:1.5px solid var(--line);border-radius:20px;padding:11px 16px;font-size:0.9rem;background:var(--cream);color:var(--ink);}
   .composer textarea:focus{outline:none;border-color:var(--green);}
   .send-btn{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;transition:background .15s,transform .12s;}
@@ -222,6 +261,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>
+      <div class="category-grid" id="categoryRow"></div>
       <p class="search-count" id="searchCount" hidden></p>
       <div class="card-grid" id="cardArea"><div class="loading-row">Loading shops…</div></div>
     </section>
@@ -277,11 +317,27 @@
     <span style="width:38px"></span>
   </div>
   <div class="chat-scroll" id="chatScroll"></div>
+  <div class="image-preview-bar" id="imagePreviewBar" hidden>
+    <img id="imagePreviewThumb">
+    <span>Image attached</span>
+    <button id="removeImagePreview" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
   <div class="composer">
+    <button class="attach-btn" id="attachImageBtn" type="button" title="Attach an image">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    </button>
+    <input type="file" id="chatImageInput" accept="image/*" hidden>
     <textarea id="chatInput" placeholder="Message the shop owner..." rows="1"></textarea>
     <button class="send-btn" id="chatSend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
   </div>
 </section>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  <img id="lightboxImg" src="">
+</div>
 
 <script>
   /* ============ SUPABASE SETUP — paste your project values here ============ */
@@ -369,15 +425,69 @@
   $('#detailBack').addEventListener('click', ()=> closePushedOne('#view-detail'));
   $('#chatBack').addEventListener('click', ()=> { closePushedOne('#view-chat'); leaveChatChannel(); });
 
-  /* ---------------- home: shop list + search ---------------- */
+  /* ---------------- home: shop list + search + category ---------------- */
   let allShops = [];
+  let activeCategory = '';
+
+  const ICON_SHIRT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l4 3-2 3-2-1.5V20H8V8.5L6 10 4 7l4-3 2 2h4z"/></svg>`;
+  const ICON_DROPLET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s7 7.58 7 12a7 7 0 1 1-14 0c0-4.42 7-12 7-12Z"/></svg>`;
+  const ICON_CHIP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>`;
+  const ICON_WRENCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-3-3 2.5-2.5Z"/></svg>`;
+  const ICON_RECYCLE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.784 1.784 0 0 1 1.545.888l4.107 7.114"/><path d="m13.378 9.633 4.096 1.098 1.097-4.096"/></svg>`;
+  const ICON_ARMCHAIR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12V7a3 3 0 0 1 6 0v3M19 12V7a3 3 0 0 0-6 0v3"/><path d="M5 9a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2v3h14v-3a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2"/><path d="M5 16h14"/></svg>`;
+  const ICON_BAG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>`;
+  const ICON_PALLET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 4 3 8l9 4 9-4Z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg>`;
+  const ICON_GRID_DOTS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="5" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg>`;
+
+  // ===== PASTE YOUR OWN CATEGORY PHOTOS HERE =====
+  // Set `photo` to any image URL (your own hosting, Supabase Storage, etc).
+  // Leave it as '' and the card falls back to the icon + gradient look automatically.
+  const CATEGORIES = [
+    { value:'clothing',    label:'Clothing',    icon: ICON_SHIRT,     cls:'cat-clothing',    photo:'https://plus.unsplash.com/premium_photo-1661964205360-b0621b5a9366?q=80&w=1138&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { value:'cosmetics',   label:'Cosmetics',   icon: ICON_DROPLET,   cls:'cat-cosmetics',   photo:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { value:'electronics', label:'Electronics', icon: ICON_CHIP,      cls:'cat-electronics', photo:'https://images.unsplash.com/photo-1639915008614-7b6797823861?q=80&w=749&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { value:'hardware',    label:'Hardware',    icon: ICON_WRENCH,    cls:'cat-hardware',    photo:'https://images.unsplash.com/photo-1671040726131-746880d06bb5?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { value:'plastics',    label:'Plastics',    icon: ICON_RECYCLE,   cls:'cat-plastics',    photo:'https://i.pinimg.com/736x/34/72/87/347287ba862935e8c98b7ffcf4af8dc5.jpg' },
+    { value:'furniture',   label:'Furniture',   icon: ICON_ARMCHAIR,  cls:'cat-furniture',   photo:'https://i.pinimg.com/1200x/3d/34/8e/3d348e59aa822524c1ebd2b1575fbd04.jpg' },
+    { value:'retail',      label:'Retail',      icon: ICON_BAG,       cls:'cat-retail',      photo:'https://i.pinimg.com/736x/3d/c8/44/3dc8444cb0a135cea37f130f64fc4fb7.jpg' },
+    { value:'wholesale',   label:'Wholesale',   icon: ICON_PALLET,    cls:'cat-wholesale',   photo:'https://i.pinimg.com/736x/8a/a3/18/8aa318f4d3e42606985abe5fe29c6e29.jpg' },
+    { value:'other',       label:'Services',       icon: ICON_GRID_DOTS, cls:'cat-other',       photo:'https://i.pinimg.com/736x/15/f1/36/15f136ecd96d6f6d518c97bc33d84c8d.jpg' }
+  ];
+  // ===== END OF CATEGORY PHOTO SLOTS =====
+
+  function renderCategoryRow(){
+    const wrap = $('#categoryRow');
+    wrap.innerHTML = CATEGORIES.map(c=>{
+      const count = allShops.filter(s => s.category === c.value).length;
+      const isActive = activeCategory === c.value;
+      return `
+        <button class="category-card ${c.cls} ${isActive ? 'active' : ''}" data-cat="${c.value}">
+          ${c.photo ? `<div class="cat-photo" style="background-image:url('${c.photo}')"></div><div class="cat-overlay"></div>` : ''}
+          <div class="cat-icon">${c.icon}</div>
+          <div class="cat-body">
+            <h3>${c.label}</h3>
+            <span class="cat-stat">${count} shop${count===1?'':'s'}</span>
+            <span class="cat-explore">${isActive ? 'Showing' : 'Explore'} ${ICON_CHEV}</span>
+          </div>
+        </button>`;
+    }).join('');
+    wrap.querySelectorAll('.category-card').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const cat = btn.dataset.cat;
+        activeCategory = activeCategory === cat ? '' : cat; // tap again to clear
+        renderCategoryRow();
+        renderCards($('#shopSearch').value);
+        $('#cardArea').scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    });
+  }
 
   async function fetchShops(){
     // Only verified shops are shown to customers. Column list is explicit so
     // tin_number never reaches the browser.
     const { data, error } = await sb
       .from('shops')
-      .select('id, business_name, username, location, delivery_policy, verified, latitude, longitude, shop_images(url), products(*)')
+      .select('id, business_name, username, category, location, delivery_policy, verified, latitude, longitude, shop_images(url), products(*)')
       .eq('verified', true)
       .order('created_at', { ascending: false });
     if(error){ console.error(error); return []; }
@@ -386,10 +496,12 @@
 
   // Matches shop name, username, location, AND every product name the shop owner has
   // typed in on their dashboard — so searching "tomatoes" surfaces any shop selling them.
+  // Also respects the active category chip, if one is selected.
   function filterShops(shops, query){
     const q = query.trim().toLowerCase();
-    if(!q) return shops.map(s => ({ shop: s, matchedProduct: null }));
-    return shops
+    const byCategory = activeCategory ? shops.filter(s => s.category === activeCategory) : shops;
+    if(!q) return byCategory.map(s => ({ shop: s, matchedProduct: null }));
+    return byCategory
       .map(shop => {
         const fieldsMatch =
           shop.business_name?.toLowerCase().includes(q) ||
@@ -407,29 +519,40 @@
     const results = filterShops(allShops, query);
     const countEl = $('#searchCount');
 
-    if(query.trim()){
+    if(query.trim() || activeCategory){
       countEl.hidden = false;
-      countEl.textContent = `${results.length} shop${results.length===1?'':'s'} match "${query.trim()}"`;
+      const catLabel = CATEGORIES.find(c => c.value === activeCategory)?.label;
+      const parts = [];
+      if(catLabel) parts.push(catLabel);
+      if(query.trim()) parts.push(`"${query.trim()}"`);
+      countEl.textContent = `${results.length} shop${results.length===1?'':'s'} match ${parts.join(' + ')}`;
     } else {
       countEl.hidden = true;
     }
 
     if(allShops.length === 0){
-      wrap.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1;">
-          <div class="es-icon">${ICON_STORE_LG}</div>
-          <h3>No dukas listed yet</h3>
-          <p>Once a shop owner sets up and gets verified, it'll show up here for you to browse.</p>
-        </div>`;
+      wrap.innerHTML = '';
       return;
     }
     if(results.length === 0){
-      wrap.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1;">
-          <div class="es-icon">${ICON_STORE_LG}</div>
-          <h3>No matches</h3>
-          <p>Try a different shop name, username, location, or product.</p>
-        </div>`;
+      const catLabel = CATEGORIES.find(c => c.value === activeCategory)?.label;
+      wrap.innerHTML = catLabel
+        ? `<div class="empty-state" style="grid-column:1/-1;">
+            <div class="es-icon">${ICON_STORE_LG}</div>
+            <h3>No ${catLabel.toLowerCase()} shops yet</h3>
+            <p>None have been verified in this category yet — check back soon, or browse another category.</p>
+            <button class="google-btn" id="clearCategoryBtn" style="margin-top:14px;">Show all shops</button>
+          </div>`
+        : `<div class="empty-state" style="grid-column:1/-1;">
+            <div class="es-icon">${ICON_STORE_LG}</div>
+            <h3>No matches</h3>
+            <p>Try a different shop name, username, location, or product.</p>
+          </div>`;
+      $('#clearCategoryBtn')?.addEventListener('click', ()=>{
+        activeCategory = '';
+        renderCategoryRow();
+        renderCards($('#shopSearch').value);
+      });
       return;
     }
     wrap.innerHTML = results.map(({ shop, matchedProduct }) => {
@@ -459,6 +582,7 @@
 
   async function loadShops(){
     $('#cardArea').innerHTML = `<div class="loading-row">Loading shops…</div>`;
+    renderCategoryRow();
     allShops = await fetchShops();
     renderCards($('#shopSearch').value);
   }
@@ -569,14 +693,18 @@
     if(filtered.length === 0) return `<p style="color:var(--ink-soft);font-size:0.9rem;">No products match "${escapeHtml(query.trim())}".</p>`;
     return filtered.map(p => `
       <div class="product-card">
-        ${p.image_url ? `<img src="${p.image_url}">` : ''}
+        <div class="product-img-wrap ${p.image_url ? 'has-img' : ''}">
+          ${p.image_url
+            ? `<img src="${p.image_url}" data-lightbox="${p.image_url}" alt="${escapeHtml(p.name)}">`
+            : ICON_STORE_LG}
+        </div>
         <div class="product-card-body">
-          <h4>${escapeHtml(p.name)}</h4>
+          <h4 title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h4>
           <div class="meta-row">
             <span class="tag">UGX ${fmt(p.price)}</span>
-            ${p.negotiable ? '<span class="stamp">Negotiable</span>' : ''}
+            ${p.negotiable ? '<span class="neg-note">Negotiable</span>' : ''}
           </div>
-          <p>${escapeHtml(p.description || '')}</p>
+          <p class="product-desc">${escapeHtml(p.description || '')}</p>
           <button class="product-talk-btn" data-product="${escapeHtml(p.name)}">${ICON_CHAT_SM} Talk about this</button>
         </div>
       </div>`).join('');
@@ -602,13 +730,10 @@
           <button class="clear-btn" id="clearProductSearch" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>` : ''}
         <div class="products-grid" id="detailProductsGrid">${renderProductCards(shop.products)}</div>
-      </div>
-      <div class="sticky-cta">
-        <button class="btn btn-primary btn-block" id="talkBtn">${ICON_CHAT_SM} Talk to the business owner</button>
       </div>`;
 
-    $('#talkBtn').addEventListener('click', ()=> openChat(shop.id, shop.business_name));
     bindProductTalkButtons(shop);
+    bindLightboxImages();
 
     if(shop.products.length){
       const searchInput = $('#productSearch');
@@ -616,16 +741,24 @@
         $('#productSearchWrap').classList.toggle('has-value', this.value.length > 0);
         $('#detailProductsGrid').innerHTML = renderProductCards(shop.products, this.value);
         bindProductTalkButtons(shop);
+        bindLightboxImages();
       });
       $('#clearProductSearch').addEventListener('click', ()=>{
         searchInput.value = '';
         $('#productSearchWrap').classList.remove('has-value');
         $('#detailProductsGrid').innerHTML = renderProductCards(shop.products);
         bindProductTalkButtons(shop);
+        bindLightboxImages();
         searchInput.focus();
       });
     }
     openPushed('#view-detail');
+  }
+
+  function bindLightboxImages(){
+    document.querySelectorAll('[data-lightbox]').forEach(img=>{
+      img.addEventListener('click', ()=> openLightbox(img.dataset.lightbox));
+    });
   }
 
   function bindProductTalkButtons(shop){
@@ -744,10 +877,12 @@
     }
     body.innerHTML = msgs.map(m => `
       <div class="msg ${m.sender_role}">
-        ${escapeHtml(m.body)}
+        ${m.image_url ? `<img class="chat-img" src="${m.image_url}" data-lightbox="${m.image_url}">` : ''}
+        ${m.body ? `<span class="${m.image_url ? 'msg-caption' : ''}">${escapeHtml(m.body)}</span>` : ''}
         <time>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</time>
       </div>`).join('');
     body.scrollTop = body.scrollHeight;
+    bindLightboxImages();
   }
 
   function subscribeToChat(conversationId){
@@ -772,14 +907,60 @@
     openConversationId = null;
   }
 
+  /* ---------------- chat image attach ---------------- */
+  let pendingChatImage = null; // { file, previewUrl }
+
+  $('#attachImageBtn').addEventListener('click', ()=> $('#chatImageInput').click());
+  $('#chatImageInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    pendingChatImage = { file, previewUrl: URL.createObjectURL(file) };
+    $('#imagePreviewThumb').src = pendingChatImage.previewUrl;
+    $('#imagePreviewBar').hidden = false;
+    e.target.value = '';
+  });
+  $('#removeImagePreview').addEventListener('click', ()=>{
+    if(pendingChatImage) URL.revokeObjectURL(pendingChatImage.previewUrl);
+    pendingChatImage = null;
+    $('#imagePreviewBar').hidden = true;
+  });
+
+  async function uploadChatImage(file){
+    const path = `${currentUser.id}/${Date.now()}-${file.name}`;
+    const { error } = await sb.storage.from('chat-images').upload(path, file);
+    if(error) throw error;
+    return sb.storage.from('chat-images').getPublicUrl(path).data.publicUrl;
+  }
+
   async function sendChat(){
     const input = $('#chatInput');
     const text = input.value.trim();
-    if(!text || !openConversationId || !currentUser) return;
+    if((!text && !pendingChatImage) || !openConversationId || !currentUser) return;
+
+    const sendBtn = $('#chatSend');
+    sendBtn.disabled = true;
+
+    let imageUrl = null;
+    if(pendingChatImage){
+      try{
+        imageUrl = await uploadChatImage(pendingChatImage.file);
+      }catch(err){
+        console.error(err);
+        sendBtn.disabled = false;
+        alert('Could not send the image — please try again.');
+        return;
+      }
+    }
+
     input.value = ''; input.style.height = 'auto';
+    if(pendingChatImage){ URL.revokeObjectURL(pendingChatImage.previewUrl); pendingChatImage = null; }
+    $('#imagePreviewBar').hidden = true;
+
     const { error } = await sb.from('messages').insert({
-      conversation_id: openConversationId, sender_id: currentUser.id, sender_role: 'customer', body: text
+      conversation_id: openConversationId, sender_id: currentUser.id, sender_role: 'customer',
+      body: text || null, image_url: imageUrl
     });
+    sendBtn.disabled = false;
     if(error) console.error(error);
     // realtime subscription will refresh the view; also refresh immediately for snappy feel
     loadMessages(openConversationId);
@@ -787,6 +968,18 @@
   $('#chatSend').addEventListener('click', sendChat);
   $('#chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } });
   $('#chatInput').addEventListener('input', function(){ this.style.height='auto'; this.style.height = Math.min(this.scrollHeight,110)+'px'; });
+
+  /* ---------------- lightbox ---------------- */
+  function openLightbox(url){
+    $('#lightboxImg').src = url;
+    $('#lightbox').classList.add('open');
+  }
+  function closeLightbox(){
+    $('#lightbox').classList.remove('open');
+    $('#lightboxImg').src = '';
+  }
+  $('#lightboxClose').addEventListener('click', closeLightbox);
+  $('#lightbox').addEventListener('click', e=>{ if(e.target.id === 'lightbox') closeLightbox(); });
 
   /* ---------------- unread badge (rough heuristic: any conv whose last msg is from owner) ---------------- */
   async function updateBadges(){
