@@ -349,6 +349,11 @@
             </div>
           </div>
           <div class="field">
+            <label for="bizKeywords">Search phrases</label>
+            <input type="text" id="bizKeywords" placeholder="e.g. cheap laptops, phone repair, school shoes">
+            <p class="hint">Comma-separated phrases customers might search for — these match even if the exact words aren't in a product name.</p>
+          </div>
+          <div class="field">
             <label>Pictures of your premises</label>
             <label class="uploader" id="shopUploader">
               <div class="up-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg></div>
@@ -718,6 +723,7 @@
     $('#bizCategory').value = currentShop.category || '';
     $('#bizLocation').value = currentShop.location || '';
     $('#bizDelivery').value = currentShop.delivery_policy || '';
+    $('#bizKeywords').value = currentShop.keywords || '';
     $('#bizLat').value = currentShop.latitude ?? '';
     $('#bizLng').value = currentShop.longitude ?? '';
     updatePinStatus();
@@ -800,6 +806,7 @@
       category: $('#bizCategory').value || null,
       location: $('#bizLocation').value.trim(),
       delivery_policy: $('#bizDelivery').value.trim(),
+      keywords: $('#bizKeywords').value.trim(),
       latitude: latRaw ? Number(latRaw) : null,
       longitude: lngRaw ? Number(lngRaw) : null
     }).eq('id', currentShop.id);
@@ -879,7 +886,7 @@
     wrap.innerHTML = brandLoader('Loading conversations…');
     const { data, error } = await sb
       .from('conversations')
-      .select('id, customer_id, profiles(full_name), messages(sender_role, body, created_at)')
+      .select('id, customer_id, owner_last_read_at, profiles(full_name), messages(sender_role, body, image_url, created_at)')
       .eq('shop_id', currentShop.id)
       .order('created_at', { ascending:false });
     if(error){ console.error(error); wrap.innerHTML = `<div class="empty-state"><h3>Couldn't load messages</h3></div>`; return; }
@@ -897,9 +904,11 @@
     wrap.innerHTML = data.map(c=>{
       const msgs = (c.messages||[]).slice().sort((a,b)=> new Date(a.created_at)-new Date(b.created_at));
       const last = msgs[msgs.length-1];
-      const isUnread = last && last.sender_role === 'customer';
+      const readAt = c.owner_last_read_at ? new Date(c.owner_last_read_at) : null;
+      const isUnread = last && last.sender_role === 'customer' && (!readAt || new Date(last.created_at) > readAt);
       if(isUnread) unread++;
       const name = c.profiles?.full_name || 'Customer';
+      const preview = last ? (last.body || (last.image_url ? '📷 Photo' : '')) : 'No messages yet';
       return `
         <div class="conv-row" data-cid="${c.id}" data-name="${escapeHtml(name)}">
           <div class="avatar">${name.charAt(0).toUpperCase()}</div>
@@ -909,7 +918,7 @@
               ${last ? `<span class="conv-time">${new Date(last.created_at).toLocaleDateString([], {month:'short', day:'numeric'})}</span>` : ''}
             </div>
             <div class="conv-preview">
-              <p>${last ? escapeHtml(last.body) : 'No messages yet'}</p>
+              <p>${escapeHtml(preview)}</p>
               ${isUnread ? `<span class="dot"></span>` : ''}
             </div>
           </div>
@@ -934,14 +943,25 @@
     $('#chatScroll').innerHTML = brandLoader('Loading chat…');
     $('#view-chat').classList.add('active');
     await loadMessages(conversationId);
+    markConversationRead(conversationId);
     subscribeToChat(conversationId);
     setTimeout(()=> $('#replyText').focus(), 300);
   }
 
+  async function markConversationRead(conversationId){
+    await sb.from('conversations').update({ owner_last_read_at: new Date().toISOString() }).eq('id', conversationId);
+  }
+
+  let currentConvoMeta = null;
+
   async function loadMessages(conversationId){
-    const { data, error } = await sb.from('messages').select('*').eq('conversation_id', conversationId).order('created_at');
+    const [{ data: msgs, error }, { data: convo }] = await Promise.all([
+      sb.from('messages').select('*').eq('conversation_id', conversationId).order('created_at'),
+      sb.from('conversations').select('customer_last_read_at').eq('id', conversationId).single()
+    ]);
     if(error){ console.error(error); return; }
-    renderChatMessages(data);
+    currentConvoMeta = convo;
+    renderChatMessages(msgs);
   }
 
   function renderChatMessages(msgs){
@@ -950,12 +970,16 @@
       body.innerHTML = `<div class="empty-chat">No messages yet in this conversation.</div>`;
       return;
     }
-    body.innerHTML = msgs.map(m => `
+    const otherReadAt = currentConvoMeta?.customer_last_read_at ? new Date(currentConvoMeta.customer_last_read_at) : null;
+    body.innerHTML = msgs.map(m => {
+      const seen = m.sender_role === 'owner' && otherReadAt && new Date(m.created_at) <= otherReadAt;
+      return `
       <div class="msg ${m.sender_role}">
         ${m.image_url ? `<img class="chat-img" src="${m.image_url}" data-lightbox="${m.image_url}">` : ''}
         ${m.body ? `<span>${escapeHtml(m.body)}</span>` : ''}
-        <time>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</time>
-      </div>`).join('');
+        <time>${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}${m.sender_role === 'owner' ? ` · ${seen ? 'Seen' : 'Sent'}` : ''}</time>
+      </div>`;
+    }).join('');
     body.scrollTop = body.scrollHeight;
     bindLightboxImages();
   }
@@ -976,7 +1000,7 @@
       .channel(`owner-conversation-${conversationId}`)
       .on('postgres_changes', {
         event:'INSERT', schema:'public', table:'messages', filter:`conversation_id=eq.${conversationId}`
-      }, ()=> loadMessages(conversationId))
+      }, ()=> { loadMessages(conversationId); markConversationRead(conversationId); })
       .subscribe();
   }
   // Only tears down the realtime channel — safe to call while switching between
