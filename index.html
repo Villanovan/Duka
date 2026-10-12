@@ -671,6 +671,108 @@ header.topbar{border-radius:0;background:var(--green-dark);box-shadow:0 2px 12px
   .bn-btn svg { width: 21px; height: 21px; }
 }
 
+
+/* Messaging presentation only: existing application handlers remain unchanged. */
+#view-messages .messages-shell{background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm);}
+#view-messages .messages-sidebar{min-width:0;background:var(--paper);}
+#view-messages .section-head{padding:20px 18px 16px;margin:0;border-bottom:1px solid var(--line);}
+#view-messages .section-head h1{font-size:1.25rem;color:var(--green-dark);}
+#view-messages .section-head .sub{font-size:.76rem;margin:4px 0 0;color:var(--green);}
+#view-messages #convList{gap:4px;padding:10px;}
+#view-messages .conv-row{border:0;border-radius:13px;padding:12px 10px;gap:10px;box-shadow:none;}
+#view-messages .conv-row:hover{transform:none;background:var(--green-soft);}
+#view-messages .conv-row[aria-current="true"]{background:var(--cream-deep);box-shadow:inset 3px 0 var(--mango);}
+#view-messages .conv-row .avatar{width:40px;height:40px;font-size:1rem;}
+#view-messages .conv-top h4{font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;color:var(--green-dark);}
+#view-messages .conv-preview p{font-size:.72rem;color:var(--green);}
+#view-messages .conv-time{font-size:.6rem;}
+#view-messages .dot{background:var(--mango);}
+.messages-chat-host{display:none;}
+#view-chat .chat-scroll{min-height:0;background:var(--cream);padding:22px 24px;}
+#view-chat .msg-row.customer .msg{background:var(--green-dark);}
+#view-chat .msg-row.owner .msg{color:var(--green-dark);}
+#view-chat .msg{padding:12px 15px;font-size:.83rem;border-radius:14px;}
+#view-chat .msg-row{margin-top:22px;max-width:78%;}
+#view-chat .msg-row.grouped{margin-top:3px;}
+#view-chat .chat-head-info h2{font-size:1.2rem;color:var(--green-dark);}
+#view-chat .composer{gap:8px;padding:12px;background:var(--paper);box-shadow:none;}
+#view-chat .composer textarea{min-width:0;background:var(--cream);border-radius:13px;color:var(--green-dark);}
+#view-chat .attach-btn{border:0;background:var(--cream);color:var(--green);width:36px;height:40px;border-radius:10px;}
+#view-chat .send-btn{border-radius:11px;width:40px;height:40px;background:var(--green-dark);}
+#view-chat .image-preview-bar[hidden]{display:none;}
+@media(min-width:720px){
+  #view-messages{padding-top:24px;padding-bottom:24px;}
+  #view-messages .messages-shell{display:grid;grid-template-columns:280px minmax(0,1fr);height:clamp(480px,calc(100dvh - 155px),820px);}
+  #view-messages .messages-sidebar{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);}
+  #view-messages #convList{flex:1;min-height:0;overflow-y:auto;}
+  .messages-chat-host{display:flex;position:relative;min-width:0;min-height:0;background:var(--cream);}
+  .messages-chat-placeholder{margin:auto;padding:30px;text-align:center;color:var(--ink-soft);}
+  .messages-chat-placeholder h2{font-size:1.3rem;color:var(--green-dark);}
+  .messages-chat-placeholder p{font-size:.85rem;}
+  .messages-chat-host:has(#view-chat.active) .messages-chat-placeholder{display:none;}
+  .messages-chat-host #view-chat{position:absolute;inset:0;z-index:1;transform:none;transition:none;display:none;min-width:0;min-height:0;}
+  .messages-chat-host #view-chat.active{display:flex;}
+  .messages-chat-host #chatBack{display:none;}
+  .messages-chat-host .chat-head{padding:16px 22px;box-shadow:none;}
+}
+@media(max-width:719px){
+  #view-messages .messages-shell{border:0;box-shadow:none;border-radius:16px;}
+  #view-chat .chat-scroll{padding:18px 14px;}
+  #view-chat .msg-row{max-width:88%;}
+  #view-chat .composer{padding-bottom:max(12px,env(safe-area-inset-bottom));}
+}
+
+
+/* Map design: scoped to this section; data and map handlers are unchanged. */
+#view-map{padding-top:26px;padding-bottom:26px;}
+#view-map .map-intro{margin:0 0 24px;}
+#view-map .map-eyebrow{font-size:.76rem;color:var(--paprika);margin:0 0 9px;}
+#view-map .map-intro h1{font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.12;color:var(--green-dark);max-width:550px;}
+#view-map .map-description{max-width:530px;font-size:.85rem;color:var(--ink-soft);line-height:1.8;margin:12px 0 0;}
+#view-map .map-search-panel{padding:12px;background:#fffdf8;border:1px solid var(--line);border-radius:16px;box-shadow:0 2px 4px #20291e14;margin-bottom:24px;}
+#view-map .near-me-bar{margin:0;gap:10px;align-items:stretch;}
+#view-map .search-wrap{min-width:0;}
+#view-map .search-wrap input{height:48px;background:var(--cream-deep);border:1px solid transparent;border-radius:11px;box-shadow:none;font-size:.82rem;}
+#view-map .search-wrap input:focus{border-color:var(--green);}
+#view-map .near-me-btn{border-radius:11px;padding:12px 20px;background:var(--green-dark);font-size:.82rem;box-shadow:0 2px 4px #20291e20;}
+#view-map .map-search-hint{font-size:.7rem;color:var(--ink-soft);margin:9px 2px 0;}
+#view-map .map-discovery-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr);gap:20px;align-items:start;}
+#view-map .map-panel{border:1px solid var(--line);background:#fffdf8;border-radius:16px;overflow:hidden;box-shadow:0 2px 4px #20291e14;min-width:0;}
+#view-map .map-panel-head{padding:16px 18px;border-bottom:1px solid var(--line);}
+#view-map .map-panel-head h2{font-family:'Inter',sans-serif;font-weight:600;font-size:.82rem;color:var(--green-dark);margin:0;}
+#view-map .map-panel-head p{font-size:.67rem;color:var(--ink-faint);margin:3px 0 0;}
+#view-map .map-canvas-wrap{position:relative;}
+#view-map #mapContainer{height:clamp(360px,54dvh,560px);background:var(--green-soft);position:relative;overflow:hidden;}
+#view-map .map-caption{position:absolute;bottom:26px;left:14px;z-index:1;pointer-events:none;background:#fffdf8;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:.65rem;color:var(--green-dark);box-shadow:0 2px 4px #20291e14;}
+#view-map .map-results-eyebrow{font-size:.66rem;text-transform:uppercase;letter-spacing:.045em;color:var(--ink-soft);margin:0 0 3px;}
+#view-map .map-results-panel>h2{font-size:1.05rem;color:var(--green-dark);margin:0 0 14px;}
+#view-map #nearMeCount{margin:0 0 12px;font-size:.72rem;}
+#view-map #nearMeList{gap:12px;}
+#view-map #nearMeList .conv-row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;padding:14px 13px;background:#fffdf8;border-radius:15px;box-shadow:0 1px 2px #20291e0a;}
+#view-map #nearMeList .conv-row:hover{border-color:var(--green);transform:none;box-shadow:0 2px 4px #20291e14;}
+#view-map #nearMeList .conv-row::after{content:'View shop  →';grid-column:1/-1;display:block;text-align:center;border-radius:10px;background:var(--green-dark);color:white;padding:8px;font-size:.75rem;font-weight:700;margin-top:3px;}
+#view-map #nearMeList .avatar{width:40px;height:40px;border-radius:11px;background:var(--green-soft);color:var(--green-dark);font-size:1rem;}
+#view-map #nearMeList .conv-top{flex-wrap:wrap;gap:2px 8px;}
+#view-map #nearMeList .conv-top h4{font-size:1rem;color:var(--green-dark);}
+#view-map #nearMeList .conv-time{font-size:.65rem;color:var(--paprika);}
+#view-map #nearMeList .conv-preview p{font-size:.72rem;}
+#view-map #nearMeList .empty-state{padding:24px 16px;background:#fffdf8;border-style:solid;border-radius:15px;}
+#view-map #nearMeList .empty-state h3{font-size:1.05rem;color:var(--green-dark);}
+#view-map #nearMeList .empty-state p{font-size:.8rem;}
+#view-map .leaflet-control-zoom{border:0;border-radius:12px;overflow:hidden;box-shadow:0 2px 5px #20291e25;}
+#view-map .leaflet-control-zoom a{color:var(--green-dark);background:#fffdf8;}
+@media(max-width:850px){#view-map .map-discovery-grid{grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr);gap:14px;}}
+@media(max-width:719px){
+  #view-map{padding-top:22px;}
+  #view-map .map-discovery-grid{grid-template-columns:1fr;gap:22px;}
+  #view-map .map-intro{margin-bottom:18px;}
+  #view-map .map-intro h1{font-size:1.8rem;}
+  #view-map .near-me-bar{flex-direction:column;}
+  #view-map .near-me-btn{width:100%;}
+  #view-map #mapContainer{height:380px;height:min(50dvh,420px);min-height:280px;}
+  #view-map .map-search-panel{margin-bottom:18px;}
+}
+
 </style>
 </head>
 <body>
@@ -743,7 +845,13 @@ header.topbar{border-radius:0;background:var(--green-dark);box-shadow:0 2px 12px
       <div class="category-grid" id="categoryRow"></div>
     </section>
 
-    <section class="view root" id="view-map" style="padding-top:0;">
+    <section class="view root" id="view-map">
+      <div class="map-intro">
+        <p class="map-eyebrow">Explore your neighbourhood</p>
+        <h1>Find good dukas, right<br class="map-title-break"> around the corner.</h1>
+        <p class="map-description">Search local shops by what you need, then see how close they are before you visit.</p>
+      </div>
+      <div class="map-search-panel">
       <div class="near-me-bar">
         <div class="search-wrap" style="max-width:100%;margin-bottom:0;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -754,19 +862,38 @@ header.topbar{border-radius:0;background:var(--green-dark);box-shadow:0 2px 12px
           Search near me
         </button>
       </div>
-      <p class="search-count" id="nearMeCount" hidden></p>
-      <div id="mapContainer" style="height:min(50vh,420px);border-radius:var(--r-lg);overflow:hidden;background:var(--cream-deep);position:relative;margin-bottom:14px;">
-        <div id="mapPlaceholder"></div>
+        <p class="map-search-hint">Search for a product, or leave the search empty to find all shops near you.</p>
       </div>
-      <div class="conv-list" id="nearMeList"></div>
+      <div class="map-discovery-grid">
+        <div class="map-panel">
+          <div class="map-panel-head"><h2>Your neighbourhood</h2><p>Explore pinned shops on the map</p></div>
+          <div class="map-canvas-wrap">
+            <div id="mapContainer"><div id="mapPlaceholder"></div></div>
+            <div class="map-caption">Tap a marker to preview a duka</div>
+          </div>
+        </div>
+        <aside class="map-results-panel" aria-label="Nearby shops">
+          <p class="map-results-eyebrow">Discovered for you</p>
+          <h2>Nearby shops</h2>
+          <p class="search-count" id="nearMeCount" hidden></p>
+          <div class="conv-list" id="nearMeList"></div>
+        </aside>
+      </div>
     </section>
 
     <section class="view root" id="view-messages">
-      <div class="section-head">
-        <h1>Messages</h1>
-        <p class="sub">Your conversations with shop owners.</p>
+      <div class="messages-shell">
+        <aside class="messages-sidebar" aria-label="Conversations">
+          <div class="section-head">
+            <h1>Messages</h1>
+            <p class="sub">Your conversations with shop owners.</p>
+          </div>
+          <div class="conv-list" id="convList"></div>
+        </aside>
+        <div class="messages-chat-host" id="messagesChatHost">
+          <div class="messages-chat-placeholder"><h2>Your conversations</h2><p>Select a shop to open your chat.</p></div>
+        </div>
       </div>
-      <div class="conv-list" id="convList"></div>
     </section>
   </main>
 
@@ -1888,5 +2015,44 @@ header.topbar{border-radius:0;background:var(--green-dark);box-shadow:0 2px 12px
   }
   init();
 </script>
+
+<script>
+// Presentation adapter: move the SAME chat elements, preserving all existing
+// listeners, Supabase calls, message state, and mobile navigation.
+(() => {
+  const chat = document.getElementById('view-chat');
+  const root = document.getElementById('view-messages');
+  const host = document.getElementById('messagesChatHost');
+  const list = document.getElementById('convList');
+  const anchor = document.createComment('Original chat position');
+  chat.before(anchor);
+  const desktop = window.matchMedia('(min-width:720px)');
+  let selectedId = null;
+  function highlight() {
+    list.querySelectorAll('.conv-row').forEach(row => {
+      if (chat.classList.contains('active') && row.dataset.cid === selectedId) row.setAttribute('aria-current','true');
+      else row.removeAttribute('aria-current');
+    });
+  }
+  function syncLayout() {
+    if (desktop.matches && root.classList.contains('active')) {
+      if (chat.parentNode !== host) host.append(chat);
+    } else if (chat.parentNode === host) {
+      anchor.after(chat);
+    }
+    highlight();
+  }
+  list.addEventListener('click', event => {
+    const row = event.target.closest('.conv-row');
+    if (row) { selectedId = row.dataset.cid; highlight(); }
+  });
+  new MutationObserver(syncLayout).observe(root,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(highlight).observe(chat,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(highlight).observe(list,{childList:true});
+  desktop.addEventListener('change',syncLayout);
+  syncLayout();
+})();
+</script>
+
 </body>
 </html>
